@@ -1,6 +1,82 @@
-# Welcome to your Lovable project
+# SaaS Pessoal - Sistema Web Completo
 
-## Project info
+Sistema web pessoal completo com gerenciamento financeiro, sistema de notas tipo Obsidian, mapa mental e integração com Google Drive/Sheets.
+
+## 🚀 Funcionalidades
+
+### 💰 Módulo Financeiro
+- ✅ Gerenciamento de receitas e despesas
+- ✅ Categorias personalizadas com cores e ícones
+- ✅ Metas financeiras com acompanhamento de progresso
+- ✅ Despesas recorrentes (assinaturas, contas fixas)
+- ✅ Relatórios e gráficos interativos
+- ✅ Filtros por categoria, tipo e período
+- ✅ Exportação para Google Sheets
+
+### 🧠 Sistema de Notas
+- ✅ Editor Markdown com preview em tempo real
+- ✅ Sistema de links internos estilo Obsidian `[[nota]]`
+- ✅ Tags para organização
+- ✅ Busca por título, conteúdo e tags
+- ✅ Mapa mental interativo visualizando conexões
+- ✅ Cores personalizadas por nota
+
+### ☁️ Integração Google
+- ✅ OAuth 2.0 individual por usuário
+- ✅ Exportar dados financeiros para Google Sheets
+- ✅ Backup automático no Google Drive
+- ✅ Tokens criptografados e seguros
+
+### 🎨 Interface & UX
+- ✅ Modo escuro automático (detecção do sistema)
+- ✅ Design moderno com gradientes roxo/azul
+- ✅ Animações suaves
+- ✅ 100% responsivo
+
+## 🛠️ Tecnologias
+
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **Backend**: Lovable Cloud (Supabase)
+- **Banco de Dados**: PostgreSQL
+- **Autenticação**: Supabase Auth
+- **Edge Functions**: Deno
+- **Gráficos**: Recharts
+- **Editor**: @uiw/react-md-editor
+- **Visualização**: react-force-graph-2d
+
+## ⚙️ Configuração da Integração Google
+
+Para habilitar a integração com Google Drive e Sheets:
+
+### 1. Criar Projeto no Google Cloud Console
+
+1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
+2. Crie um novo projeto
+3. Habilite as APIs: Google Drive API e Google Sheets API
+
+### 2. Configurar OAuth 2.0
+
+1. Vá para **APIs & Services > Credentials**
+2. Crie credenciais OAuth 2.0:
+   - Tipo: Web application
+   - URIs de redirecionamento: `https://seu-projeto.supabase.co/functions/v1/google-auth`
+
+### 3. Configurar Secrets
+
+Adicione no Backend do Lovable Cloud:
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+## 🔐 Segurança
+
+- Autenticação via Supabase Auth
+- Row Level Security (RLS) em todas as tabelas
+- Tokens Google criptografados
+- OAuth 2.0 individual por usuário
+
+---
+
+## Project info from Lovable
 
 **URL**: https://lovable.dev/projects/6b0351b3-5643-4969-a15a-38cd8cd9945c
 

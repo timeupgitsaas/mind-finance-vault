@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "./ThemeToggle";
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -61,6 +62,8 @@ const Navbar = () => {
                 </Link>
               );
             })}
+
+            <ThemeToggle />
 
             <Button
               variant="ghost"

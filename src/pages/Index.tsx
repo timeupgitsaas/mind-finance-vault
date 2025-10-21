@@ -5,6 +5,9 @@ import { User, Session } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { GoogleDriveConnect } from "@/components/GoogleDriveConnect";
+import { FinancialGoals } from "@/components/FinancialGoals";
+import { RecurringTransactions } from "@/components/RecurringTransactions";
 import { 
   Wallet, 
   FileText, 
@@ -168,6 +171,8 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <GoogleDriveConnect />
+          
           <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -248,6 +253,11 @@ const Index = () => {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <FinancialGoals />
+          <RecurringTransactions />
         </div>
       </div>
     </div>

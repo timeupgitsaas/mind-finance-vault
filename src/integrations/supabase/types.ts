@@ -44,8 +44,86 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_goals: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          current_amount: number | null
+          deadline: string | null
+          id: string
+          target_amount: number
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          deadline?: string | null
+          id?: string
+          target_amount: number
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          current_amount?: number | null
+          deadline?: string | null
+          id?: string
+          target_amount?: number
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_goals_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_tokens: {
+        Row: {
+          access_token: string
+          created_at: string | null
+          google_email: string | null
+          id: string
+          refresh_token: string
+          token_expiry: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string | null
+          google_email?: string | null
+          id?: string
+          refresh_token: string
+          token_expiry: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string | null
+          google_email?: string | null
+          id?: string
+          refresh_token?: string
+          token_expiry?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
+          color: string | null
           content: string
           created_at: string
           id: string
@@ -56,6 +134,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          color?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -66,6 +145,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          color?: string | null
           content?: string
           created_at?: string
           id?: string
@@ -76,6 +156,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      recurring_transactions: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string | null
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean | null
+          last_generated: string | null
+          start_date: string
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          frequency: string
+          id?: string
+          is_active?: boolean | null
+          last_generated?: string | null
+          start_date?: string
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string | null
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          last_generated?: string | null
+          start_date?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
