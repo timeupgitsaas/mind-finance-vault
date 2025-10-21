@@ -6,8 +6,12 @@ import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GoogleDriveConnect } from "@/components/GoogleDriveConnect";
+import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { FinancialGoals } from "@/components/FinancialGoals";
 import { RecurringTransactions } from "@/components/RecurringTransactions";
+import { AIInsights } from "@/components/AIInsights";
+import { AIChat } from "@/components/AIChat";
+import { CommandPalette } from "@/components/CommandPalette";
 import { 
   Wallet, 
   FileText, 
@@ -114,6 +118,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
+      <CommandPalette />
       
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <div>
@@ -171,8 +176,16 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <GoogleSignIn />
           <GoogleDriveConnect />
-          
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AIInsights />
+          <AIChat />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
