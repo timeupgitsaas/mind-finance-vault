@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, FileText, Search, Tag } from "lucide-react";
+import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 
 interface Note {
@@ -24,6 +25,8 @@ const Notes = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCorrecting, setIsCorrecting] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const { toast } = useToast();
 
   // Form state
@@ -34,6 +37,28 @@ const Notes = () => {
   useEffect(() => {
     fetchNotes();
   }, []);
+
+  // Auto-save for editing mode
+  const autoSave = async () => {
+    if (selectedNote && content) {
+      const tagsArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
+      
+      await supabase
+        .from("notes")
+        .update({
+          title,
+          content,
+          tags: tagsArray,
+        })
+        .eq("id", selectedNote.id);
+    }
+  };
+
+  useAutoSave({
+    content: `${title}${content}${tags}`,
+    onSave: autoSave,
+    delay: 3000,
+  });
 
   const fetchNotes = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -131,6 +156,42 @@ const Notes = () => {
     setTitle("");
     setContent("");
     setTags("");
+    setFocusMode(false);
+  };
+
+  const correctTextWithAI = async () => {
+    if (!content) {
+      toast({
+        title: "Nada para corrigir",
+        description: "Escreva algo primeiro!",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCorrecting(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-text-correction", {
+        body: { text: content },
+      });
+
+      if (error) throw error;
+
+      setContent(data.correctedText);
+      toast({
+        title: "Texto corrigido!",
+        description: "A IA revisou seu texto.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao corrigir texto",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsCorrecting(false);
+    }
   };
 
   const filteredNotes = notes.filter(
@@ -143,8 +204,8 @@ const Notes = () => {
   if (selectedNote) {
     return (
       <div className="min-h-screen bg-gradient-hero">
-        <Navbar />
-        <div className="container mx-auto p-6 space-y-4 animate-fade-in">
+        {!focusMode && <Navbar />}
+        <div className={`${focusMode ? "h-screen" : "container"} mx-auto p-6 space-y-4 animate-fade-in`}>
           <div className="flex items-center justify-between">
             <Input
               value={title}
@@ -153,6 +214,27 @@ const Notes = () => {
               placeholder="Título da nota"
             />
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setFocusMode(!focusMode)}
+                title={focusMode ? "Sair do modo foco" : "Modo foco"}
+              >
+                {focusMode ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={correctTextWithAI}
+                disabled={isCorrecting}
+                className="gap-2"
+              >
+                {isCorrecting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Wand2 className="w-4 h-4" />
+                )}
+                Corrigir com IA
+              </Button>
               <Button onClick={handleUpdateNote}>Salvar</Button>
               <Button variant="outline" onClick={closeEditor}>
                 Fechar
@@ -160,21 +242,23 @@ const Notes = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Input
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="Tags (separadas por vírgula)"
-              className="max-w-md"
-            />
-          </div>
+          {!focusMode && (
+            <div className="space-y-2">
+              <Input
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="Tags (separadas por vírgula)"
+                className="max-w-md"
+              />
+            </div>
+          )}
 
           <Card className="shadow-lg">
             <CardContent className="p-6">
               <MDEditor
                 value={content}
                 onChange={(val) => setContent(val || "")}
-                height={600}
+                height={focusMode ? "calc(100vh - 200px)" : 600}
                 preview="edit"
               />
             </CardContent>

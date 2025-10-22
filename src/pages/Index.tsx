@@ -5,8 +5,6 @@ import { User, Session } from "@supabase/supabase-js";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GoogleDriveConnect } from "@/components/GoogleDriveConnect";
-import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { FinancialGoals } from "@/components/FinancialGoals";
 import { RecurringTransactions } from "@/components/RecurringTransactions";
 import { AIInsights } from "@/components/AIInsights";
@@ -121,11 +119,11 @@ const Index = () => {
       <CommandPalette />
       
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Bem-vindo de volta! Aqui está um resumo do seu sistema.
-          </p>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+            Time Up Mind
+          </h1>
+          <p className="text-muted-foreground">Sistema inteligente de organização pessoal</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -176,14 +174,13 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <GoogleSignIn />
-          <GoogleDriveConnect />
+          <AIInsights />
+          <FinancialGoals />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AIInsights />
-          <AIChat />
-        </div>
+        <RecurringTransactions />
+
+        <AIChat />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="shadow-md">
@@ -268,10 +265,6 @@ const Index = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <FinancialGoals />
-          <RecurringTransactions />
-        </div>
       </div>
     </div>
   );

@@ -1,16 +1,10 @@
 project_id = "odkwywctpcntgvojnkor"
 
-[functions.google-auth]
-verify_jwt = false
-
-[functions.google-sheets-export]
-verify_jwt = false
-
-[functions.google-drive-backup]
-verify_jwt = false
-
 [functions.ai-insights]
 verify_jwt = true
 
 [functions.ai-chat]
+verify_jwt = true
+
+[functions.ai-text-correction]
 verify_jwt = true
