@@ -47,6 +47,15 @@ export function KeyboardShortcuts() {
           description: "Retornando ao dashboard...",
         });
       }
+
+      // F1 - Ajuda
+      if (e.key === "F1") {
+        e.preventDefault();
+        toast({
+          title: "Ajuda",
+          description: "Procure pelo botão de ajuda (?) na interface",
+        });
+      }
     };
 
     document.addEventListener("keydown", handleKeyPress);

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_feedback: {
+        Row: {
+          created_at: string | null
+          feedback: string
+          id: string
+          suggestion_data: Json
+          suggestion_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback: string
+          id?: string
+          suggestion_data: Json
+          suggestion_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string
+          id?: string
+          suggestion_data?: Json
+          suggestion_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string
@@ -40,6 +67,30 @@ export type Database = {
           id?: string
           name?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      exports: {
+        Row: {
+          created_at: string | null
+          export_data: Json
+          export_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          export_data: Json
+          export_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          export_data?: Json
+          export_type?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
@@ -123,33 +174,39 @@ export type Database = {
       }
       notes: {
         Row: {
+          ai_suggested_connections: string[] | null
           color: string | null
           content: string
           created_at: string
           id: string
           linked_notes: string[] | null
+          manual_connections: string[] | null
           tags: string[] | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_suggested_connections?: string[] | null
           color?: string | null
           content?: string
           created_at?: string
           id?: string
           linked_notes?: string[] | null
+          manual_connections?: string[] | null
           tags?: string[] | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_suggested_connections?: string[] | null
           color?: string | null
           content?: string
           created_at?: string
           id?: string
           linked_notes?: string[] | null
+          manual_connections?: string[] | null
           tags?: string[] | null
           title?: string
           updated_at?: string

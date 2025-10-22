@@ -3,11 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import Navbar from "@/components/Navbar";
+import { NoteSuggestions } from "@/components/NoteSuggestions";
+import { AILoader } from "@/components/AILoader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2 } from "lucide-react";
+import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 
 interface Note {
@@ -17,6 +20,9 @@ interface Note {
   tags: string[];
   created_at: string;
   updated_at: string;
+  manual_connections?: string[];
+  ai_suggested_connections?: string[];
+  color?: string;
 }
 
 const Notes = () => {
@@ -203,14 +209,14 @@ const Notes = () => {
 
   if (selectedNote) {
     return (
-      <div className="min-h-screen bg-gradient-hero">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
         {!focusMode && <Navbar />}
         <div className={`${focusMode ? "h-screen" : "container"} mx-auto p-6 space-y-4 animate-fade-in`}>
           <div className="flex items-center justify-between">
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-2xl font-bold border-0 bg-transparent focus-visible:ring-0"
+              className="text-2xl font-bold border-0 bg-transparent focus-visible:ring-0 placeholder:text-muted-foreground/50"
               placeholder="Título da nota"
             />
             <div className="flex gap-2">
@@ -219,6 +225,7 @@ const Notes = () => {
                 size="icon"
                 onClick={() => setFocusMode(!focusMode)}
                 title={focusMode ? "Sair do modo foco" : "Modo foco"}
+                className="transition-transform hover:scale-105"
               >
                 {focusMode ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
               </Button>
@@ -226,16 +233,20 @@ const Notes = () => {
                 variant="outline"
                 onClick={correctTextWithAI}
                 disabled={isCorrecting}
-                className="gap-2"
+                className="gap-2 transition-all hover:border-primary"
               >
                 {isCorrecting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <AILoader />
                 ) : (
-                  <Wand2 className="w-4 h-4" />
+                  <>
+                    <Wand2 className="w-4 h-4" />
+                    Corrigir com IA
+                  </>
                 )}
-                Corrigir com IA
               </Button>
-              <Button onClick={handleUpdateNote}>Salvar</Button>
+              <Button onClick={handleUpdateNote} className="gap-2">
+                Salvar
+              </Button>
               <Button variant="outline" onClick={closeEditor}>
                 Fechar
               </Button>
@@ -243,17 +254,37 @@ const Notes = () => {
           </div>
 
           {!focusMode && (
-            <div className="space-y-2">
-              <Input
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="Tags (separadas por vírgula)"
-                className="max-w-md"
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="Tags (separadas por vírgula)"
+                  className="max-w-md"
+                />
+              </div>
+              
+              <NoteSuggestions 
+                noteId={selectedNote.id}
+                onConnectionAccept={async (targetNoteId) => {
+                  const currentConnections = selectedNote.manual_connections || [];
+                  if (!currentConnections.includes(targetNoteId)) {
+                    await supabase
+                      .from("notes")
+                      .update({
+                        manual_connections: [...currentConnections, targetNoteId]
+                      })
+                      .eq("id", selectedNote.id);
+                    
+                    fetchNotes();
+                  }
+                }}
               />
             </div>
           )}
 
-          <Card className="shadow-lg">
+          <Card className="shadow-xl border-primary/20 backdrop-blur-sm">
             <CardContent className="p-6">
               <MDEditor
                 value={content}
@@ -263,70 +294,108 @@ const Notes = () => {
               />
             </CardContent>
           </Card>
+          
+          {!focusMode && (
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              <Sparkles className="w-3 h-3" />
+              <span>Salvamento automático ativado</span>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Navbar />
       
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Notas</h1>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Notas
+            </h1>
             <p className="text-muted-foreground">Organize suas ideias e pensamentos</p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Nova Nota
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Criar Nova Nota</DialogTitle>
-                <DialogDescription>
-                  Escreva suas ideias usando Markdown
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Título da nota"
-                />
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                const dataStr = JSON.stringify(notes, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const exportFileDefaultName = `notes-export-${new Date().toISOString().split('T')[0]}.json`;
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                toast({
+                  title: "Exportação Concluída",
+                  description: "Suas notas foram exportadas!",
+                });
+              }}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Exportar
+            </Button>
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Nova Nota
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Criar Nova Nota
+                  </DialogTitle>
+                  <DialogDescription>
+                    Escreva suas ideias usando Markdown. Use [[título]] para criar links entre notas.
+                  </DialogDescription>
+                </DialogHeader>
                 
-                <Input
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="Tags (separadas por vírgula)"
-                />
-                
-                <MDEditor
-                  value={content}
-                  onChange={(val) => setContent(val || "")}
-                  height={400}
-                />
-                
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleCreateNote}>
-                    Criar Nota
-                  </Button>
+                <div className="space-y-4">
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Título da nota"
+                  />
+                  
+                  <div className="flex items-center gap-2">
+                    <Tag className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="Tags (separadas por vírgula)"
+                    />
+                  </div>
+                  
+                  <MDEditor
+                    value={content}
+                    onChange={(val) => setContent(val || "")}
+                    height={400}
+                  />
+                  
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleCreateNote}>
+                      Criar Nota
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
-        <Card className="shadow-md">
+        <Card className="shadow-md border-primary/20">
           <CardContent className="p-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -342,12 +411,13 @@ const Notes = () => {
 
         {loading ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              Carregando...
+            <CardContent className="py-8 text-center">
+              <AILoader />
+              <p className="mt-4 text-muted-foreground">Carregando notas...</p>
             </CardContent>
           </Card>
         ) : filteredNotes.length === 0 ? (
-          <Card>
+          <Card className="border-dashed">
             <CardContent className="py-12 text-center">
               <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-muted-foreground">
@@ -360,30 +430,28 @@ const Notes = () => {
             {filteredNotes.map((note) => (
               <Card
                 key={note.id}
-                className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02]"
+                className="cursor-pointer hover:shadow-xl hover:border-primary/40 transition-all hover:scale-[1.02] group"
                 onClick={() => openNote(note)}
               >
                 <CardHeader>
-                  <CardTitle className="line-clamp-1">{note.title}</CardTitle>
+                  <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
+                    {note.title}
+                  </CardTitle>
                   <CardDescription className="line-clamp-2">
                     {note.content.substring(0, 100)}...
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {note.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-2">
                       {note.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-secondary rounded-full"
-                        >
-                          <Tag className="w-3 h-3" />
+                        <Badge key={idx} variant="secondary" className="text-xs">
                           {tag}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   )}
-                  <p className="text-xs text-muted-foreground mt-2">
+                  <p className="text-xs text-muted-foreground">
                     {new Date(note.updated_at).toLocaleDateString("pt-BR")}
                   </p>
                 </CardContent>
