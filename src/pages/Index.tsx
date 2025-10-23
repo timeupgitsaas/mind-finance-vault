@@ -121,9 +121,9 @@ const Index = () => {
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
-            Time Up Mind
+            Time Up Flow
           </h1>
-          <p className="text-muted-foreground">Sistema inteligente de organização pessoal</p>
+          <p className="text-muted-foreground">Organização Inteligente de Ideias</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

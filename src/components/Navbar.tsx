@@ -40,9 +40,14 @@ const Navbar = () => {
             <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-primary">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Time Up Mind
-            </span>
+            <div className="flex flex-col">
+              <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
+                Time Up Flow
+              </span>
+              <span className="text-xs text-muted-foreground -mt-1">
+                Organização Inteligente de Ideias
+              </span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-2">

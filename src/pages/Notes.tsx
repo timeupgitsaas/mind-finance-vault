@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download } from "lucide-react";
+import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download, Trash2 } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 
 interface Note {
@@ -430,11 +430,41 @@ const Notes = () => {
             {filteredNotes.map((note) => (
               <Card
                 key={note.id}
-                className="cursor-pointer hover:shadow-xl hover:border-primary/40 transition-all hover:scale-[1.02] group"
+                className="relative cursor-pointer hover:shadow-xl hover:border-primary/40 transition-all hover:scale-[1.02] group"
                 onClick={() => openNote(note)}
               >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (confirm("Deseja realmente excluir esta nota?")) {
+                      const { error } = await supabase
+                        .from("notes")
+                        .delete()
+                        .eq("id", note.id);
+                      
+                      if (error) {
+                        toast({
+                          title: "Erro ao excluir",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      } else {
+                        toast({
+                          title: "Nota excluída",
+                          description: "A nota foi removida com sucesso.",
+                        });
+                        fetchNotes();
+                      }
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
                 <CardHeader>
-                  <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
+                  <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors pr-8">
                     {note.title}
                   </CardTitle>
                   <CardDescription className="line-clamp-2">

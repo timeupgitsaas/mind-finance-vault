@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Network, Download, Filter } from "lucide-react";
+import { Network, Download, Filter, Link2, Trash2 } from "lucide-react";
 import ForceGraph2D from "react-force-graph-2d";
 
 interface Note {
@@ -42,6 +42,9 @@ const MindMap = () => {
   const [loading, setLoading] = useState(true);
   const [filterTag, setFilterTag] = useState("");
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [connectMode, setConnectMode] = useState(false);
+  const [selectedNodeForConnection, setSelectedNodeForConnection] = useState<string | null>(null);
+  const [deletingNote, setDeletingNote] = useState<string | null>(null);
   const { toast } = useToast();
   const fgRef = useRef<any>();
 
@@ -193,10 +196,23 @@ const MindMap = () => {
             </p>
           </div>
           
-          <Button onClick={exportData} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Exportar Dados
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                setConnectMode(!connectMode);
+                setSelectedNodeForConnection(null);
+              }} 
+              variant={connectMode ? "default" : "outline"} 
+              className="gap-2"
+            >
+              <Link2 className="h-4 w-4" />
+              {connectMode ? "Cancelar Conexão" : "Conectar Notas"}
+            </Button>
+            <Button onClick={exportData} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Exportar Dados
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
@@ -244,6 +260,7 @@ const MindMap = () => {
               <CardDescription>
                 Use [[título da nota]] em suas notas para criar links automáticos.
                 Clique e arraste para explorar. Use a roda do mouse para zoom.
+                {connectMode && <span className="block mt-2 text-primary font-medium">🔗 Modo Conexão: Clique em duas notas para conectá-las manualmente</span>}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -294,13 +311,76 @@ const MindMap = () => {
                     ctx.fillStyle = "#ffffff";
                     ctx.fillText(label, node.x, node.y + 12 + fontSize / 2);
                   }}
-                  onNodeClick={(node: any) => {
-                    const note = notes.find((n) => n.id === node.id);
-                    if (note) {
-                      toast({
-                        title: note.title,
-                        description: `${note.content.substring(0, 150)}...`,
-                      });
+                  onNodeClick={async (node: any) => {
+                    if (connectMode) {
+                      if (!selectedNodeForConnection) {
+                        setSelectedNodeForConnection(node.id);
+                        toast({
+                          title: "Modo Conexão Ativado",
+                          description: `"${node.name}" selecionada. Clique em outra nota para conectar.`,
+                        });
+                      } else {
+                        // Create manual connection
+                        const sourceNote = notes.find(n => n.id === selectedNodeForConnection);
+                        if (sourceNote && node.id !== selectedNodeForConnection) {
+                          const currentConnections = sourceNote.manual_connections || [];
+                          if (!currentConnections.includes(node.id)) {
+                            await supabase
+                              .from("notes")
+                              .update({
+                                manual_connections: [...currentConnections, node.id]
+                              })
+                              .eq("id", selectedNodeForConnection);
+                            
+                            toast({
+                              title: "✨ Conexão Criada!",
+                              description: "As notas foram conectadas com sucesso",
+                            });
+                            fetchNotes();
+                          } else {
+                            toast({
+                              title: "Conexão já existe",
+                              description: "Essas notas já estão conectadas",
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                        setSelectedNodeForConnection(null);
+                        setConnectMode(false);
+                      }
+                    } else {
+                      const note = notes.find((n) => n.id === node.id);
+                      if (note) {
+                        toast({
+                          title: note.title,
+                          description: `${note.content.substring(0, 150)}...`,
+                        });
+                      }
+                    }
+                  }}
+                  onNodeRightClick={async (node: any) => {
+                    const note = notes.find(n => n.id === node.id);
+                    if (note && confirm(`Deseja excluir a nota "${note.title}"?`)) {
+                      setDeletingNote(node.id);
+                      const { error } = await supabase
+                        .from("notes")
+                        .delete()
+                        .eq("id", node.id);
+                      
+                      if (error) {
+                        toast({
+                          title: "Erro ao excluir",
+                          description: error.message,
+                          variant: "destructive",
+                        });
+                      } else {
+                        toast({
+                          title: "Nota excluída",
+                          description: "A nota foi removida do mapa mental.",
+                        });
+                        fetchNotes();
+                      }
+                      setDeletingNote(null);
                     }
                   }}
                   onNodeHover={(node: any) => {

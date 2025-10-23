@@ -15,10 +15,10 @@ export function HelpDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Manual do Time Up Mind
+            Manual do Time Up Flow
           </DialogTitle>
           <DialogDescription>
-            Guia completo de funcionalidades e atalhos do sistema
+            Guia completo de funcionalidades e atalhos - Organização Inteligente de Ideias
           </DialogDescription>
         </DialogHeader>
 
@@ -83,9 +83,15 @@ export function HelpDialog() {
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-1">Correção com IA</h4>
+                <h4 className="font-semibold mb-1">🧠 Análise Inteligente (Novo!)</h4>
                 <p className="text-sm text-muted-foreground">
-                  Clique no botão de varinha mágica para corrigir automaticamente erros de português e gramática.
+                  Na página de edição de notas, use o botão "Analisar Conexões" para que a IA sugira automaticamente notas relacionadas com base em similaridade de conteúdo e temas. A IA aprende com suas escolhas!
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Correção Automática</h4>
+                <p className="text-sm text-muted-foreground">
+                  Clique no botão de varinha mágica para corrigir automaticamente erros de português, gramática e clareza do texto.
                 </p>
               </div>
               <div>
@@ -110,21 +116,33 @@ export function HelpDialog() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <h4 className="font-semibold mb-1">Visualização</h4>
+                <h4 className="font-semibold mb-1">Visualização Interativa</h4>
                 <p className="text-sm text-muted-foreground">
-                  O mapa mental mostra todas as suas notas e suas conexões de forma visual e interativa.
+                  O mapa mental mostra todas as suas notas e suas conexões de forma visual e interativa. Clique e arraste para mover o mapa. Use a roda do mouse para zoom.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-1">Navegação</h4>
+                <h4 className="font-semibold mb-1">🔗 Conexões Manuais (Novo!)</h4>
                 <p className="text-sm text-muted-foreground">
-                  Clique e arraste para mover o mapa. Use a roda do mouse para zoom. Clique em um nó para ver detalhes da nota.
+                  Clique no botão "Conectar Notas" para ativar o modo de conexão. Em seguida, clique em duas notas para conectá-las manualmente, como no Miro ou Manychat. As conexões manuais aparecem em roxo, enquanto as automáticas são cinza.
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-1">Cores</h4>
+                <h4 className="font-semibold mb-1">Excluir Notas</h4>
                 <p className="text-sm text-muted-foreground">
-                  As cores dos nós representam diferentes tags e categorias das suas notas.
+                  Clique com o botão direito em qualquer nota no mapa mental para excluí-la rapidamente.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Filtros e Busca</h4>
+                <p className="text-sm text-muted-foreground">
+                  Use os filtros de tags para visualizar apenas notas de categorias específicas. As cores representam diferentes tags.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Exportar</h4>
+                <p className="text-sm text-muted-foreground">
+                  Exporte todo o mapa mental e conexões em formato JSON para backup ou análise externa.
                 </p>
               </div>
             </CardContent>
