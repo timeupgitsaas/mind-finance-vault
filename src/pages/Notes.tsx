@@ -5,13 +5,16 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import Navbar from "@/components/Navbar";
 import { NoteSuggestions } from "@/components/NoteSuggestions";
 import { AILoader } from "@/components/AILoader";
+import { FlowBoard } from "@/components/FlowBoard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download, Trash2 } from "lucide-react";
+import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download, Trash2, Network, BookOpen } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
+import { useNavigate } from "react-router-dom";
 
 interface Note {
   id: string;
@@ -33,7 +36,9 @@ const Notes = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("notes");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Form state
   const [title, setTitle] = useState("");
@@ -311,37 +316,57 @@ const Notes = () => {
       <Navbar />
       
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Notas
-            </h1>
-            <p className="text-muted-foreground">Organize suas ideias e pensamentos</p>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Time Up Flow
+              </h1>
+              <p className="text-muted-foreground">Organização Inteligente de Ideias</p>
+            </div>
+            
+            <TabsList className="grid w-[400px] grid-cols-3">
+              <TabsTrigger value="notes" className="gap-2">
+                <FileText className="w-4 h-4" />
+                Notas
+              </TabsTrigger>
+              <TabsTrigger value="flow" className="gap-2">
+                <BookOpen className="w-4 h-4" />
+                Fluxos Visuais
+              </TabsTrigger>
+              <TabsTrigger value="map" className="gap-2">
+                <Network className="w-4 h-4" />
+                Mapa de Ideias
+              </TabsTrigger>
+            </TabsList>
           </div>
           
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
+          <TabsContent value="notes" className="space-y-6 mt-0">
+            <div className="flex items-center justify-between">
+              <div className="flex-1" />
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
                 const dataStr = JSON.stringify(notes, null, 2);
                 const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
                 const exportFileDefaultName = `notes-export-${new Date().toISOString().split('T')[0]}.json`;
                 const linkElement = document.createElement('a');
                 linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-                toast({
-                  title: "Exportação Concluída",
-                  description: "Suas notas foram exportadas!",
-                });
-              }}
-              className="gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Exportar
-            </Button>
-            
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  linkElement.setAttribute('download', exportFileDefaultName);
+                  linkElement.click();
+                  toast({
+                    title: "Exportação Concluída",
+                    description: "Suas notas foram exportadas!",
+                  });
+                }}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Exportar
+              </Button>
+              
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus className="w-4 h-4" />
@@ -390,12 +415,12 @@ const Notes = () => {
                     </Button>
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
-        </div>
 
-        <Card className="shadow-md border-primary/20">
+          <Card className="shadow-md border-primary/20">
           <CardContent className="p-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -406,89 +431,117 @@ const Notes = () => {
                 className="pl-10"
               />
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {loading ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <AILoader />
-              <p className="mt-4 text-muted-foreground">Carregando notas...</p>
-            </CardContent>
-          </Card>
-        ) : filteredNotes.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-12 text-center">
-              <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">
-                {searchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota criada ainda. Crie sua primeira nota!"}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredNotes.map((note) => (
-              <Card
-                key={note.id}
-                className="relative cursor-pointer hover:shadow-xl hover:border-primary/40 transition-all hover:scale-[1.02] group"
-                onClick={() => openNote(note)}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (confirm("Deseja realmente excluir esta nota?")) {
-                      const { error } = await supabase
-                        .from("notes")
-                        .delete()
-                        .eq("id", note.id);
-                      
-                      if (error) {
-                        toast({
-                          title: "Erro ao excluir",
-                          description: error.message,
-                          variant: "destructive",
-                        });
-                      } else {
-                        toast({
-                          title: "Nota excluída",
-                          description: "A nota foi removida com sucesso.",
-                        });
-                        fetchNotes();
-                      }
-                    }
-                  }}
+          {loading ? (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <AILoader />
+                <p className="mt-4 text-muted-foreground">Carregando notas...</p>
+              </CardContent>
+            </Card>
+          ) : filteredNotes.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  {searchTerm ? "Nenhuma nota encontrada" : "Nenhuma nota criada ainda. Crie sua primeira nota!"}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredNotes.map((note) => (
+                <Card
+                  key={note.id}
+                  className="relative cursor-pointer hover:shadow-xl hover:border-primary/40 transition-all hover:scale-[1.02] group"
+                  onClick={() => openNote(note)}
                 >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-                <CardHeader>
-                  <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors pr-8">
-                    {note.title}
-                  </CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {note.content.substring(0, 100)}...
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {note.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {note.tags.map((tag, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(note.updated_at).toLocaleDateString("pt-BR")}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (confirm("Deseja realmente excluir esta nota?")) {
+                        const { error } = await supabase
+                          .from("notes")
+                          .delete()
+                          .eq("id", note.id);
+                        
+                        if (error) {
+                          toast({
+                            title: "Erro ao excluir",
+                            description: error.message,
+                            variant: "destructive",
+                          });
+                        } else {
+                          toast({
+                            title: "Nota excluída",
+                            description: "A nota foi removida com sucesso.",
+                          });
+                          fetchNotes();
+                        }
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                  <CardHeader>
+                    <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors pr-8">
+                      {note.title}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {note.content.substring(0, 100)}...
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {note.tags.map((tag, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(note.updated_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="flow" className="mt-0">
+          <FlowBoard />
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-0">
+          <Card className="shadow-md border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Network className="w-5 h-5" />
+                Mapa de Ideias
+              </CardTitle>
+              <CardDescription>
+                Visualize as conexões entre suas notas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => navigate("/mindmap")}
+                className="w-full"
+              >
+                Abrir Mapa Completo
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       </div>
     </div>
   );

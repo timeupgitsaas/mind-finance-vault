@@ -19,14 +19,30 @@ export function NoteSuggestions({ noteId, onConnectionAccept }: NoteSuggestionsP
   const analyzeSimilarNotes = async () => {
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Você precisa estar autenticado para usar esta funcionalidade");
+      }
+
       const { data, error } = await supabase.functions.invoke("ai-note-analysis", {
         body: {
           noteId,
           analysisType: "similar",
         },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Erro ao analisar conexões. Tente novamente.");
+      }
+
+      if (!data || !data.analysis) {
+        throw new Error("Resposta inválida do servidor");
+      }
 
       setSuggestions(data.analysis);
       toast({
@@ -37,7 +53,7 @@ export function NoteSuggestions({ noteId, onConnectionAccept }: NoteSuggestionsP
       console.error("Error analyzing notes:", error);
       toast({
         title: "Erro na análise",
-        description: error.message,
+        description: error.message || "Erro ao processar a análise. Verifique sua conexão e tente novamente.",
         variant: "destructive",
       });
     } finally {

@@ -22,13 +22,29 @@ serve(async (req) => {
       }
     );
 
-    const authHeader = req.headers.get("Authorization")!;
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace("Bearer ", "")
-    );
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(JSON.stringify({ error: "Authorization header missing" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError) {
+      console.error("Auth error:", authError);
+      return new Response(JSON.stringify({ error: "Authentication failed: " + authError.message }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!user) {
+      console.error("No user found");
+      return new Response(JSON.stringify({ error: "User not found" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -118,7 +134,14 @@ Forneça insights sobre:
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error("AI API error:", aiResponse.status, errorText);
-      throw new Error("Failed to analyze notes");
+      
+      if (aiResponse.status === 429) {
+        throw new Error("Limite de requisições atingido. Aguarde um momento e tente novamente.");
+      } else if (aiResponse.status === 402) {
+        throw new Error("Créditos insuficientes. Adicione créditos ao seu workspace.");
+      }
+      
+      throw new Error(`Falha ao analisar notas (${aiResponse.status}): ${errorText}`);
     }
 
     const aiData = await aiResponse.json();
