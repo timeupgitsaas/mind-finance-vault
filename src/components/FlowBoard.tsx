@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Save, Download, Trash2, Edit2, Grip } from "lucide-react";
+import { Plus, Save, Download, Trash2, Edit2, Grip, ZoomIn, ZoomOut, Maximize2, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface FlowBlock {
   id: string;
@@ -28,30 +29,60 @@ interface FlowBoardData {
 }
 
 export const FlowBoard = () => {
+  const [flows, setFlows] = useState<Array<{ id: string; name: string; updated_at: string }>>([]);
+  const [currentFlowId, setCurrentFlowId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<FlowBlock[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<FlowBlock | null>(null);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateFlowOpen, setIsCreateFlowOpen] = useState(false);
+  const [isBlockDetailOpen, setIsBlockDetailOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [newFlowName, setNewFlowName] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const colors = ["#8B5CF6", "#EC4899", "#3B82F6", "#10B981", "#F59E0B", "#EF4444"];
 
   useEffect(() => {
-    loadFlowBoard();
+    loadFlowsList();
   }, []);
 
-  const loadFlowBoard = async () => {
+  useEffect(() => {
+    if (currentFlowId) {
+      loadFlowBoard(currentFlowId);
+    }
+  }, [currentFlowId]);
+
+  const loadFlowsList = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    const { data } = await supabase
+      .from("notes")
+      .select("id, title, updated_at")
+      .eq("user_id", user.id)
+      .contains("tags", ["fluxo-visual"])
+      .order("updated_at", { ascending: false });
+
+    if (data && data.length > 0) {
+      setFlows(data.map(d => ({ id: d.id, name: d.title, updated_at: d.updated_at })));
+      if (!currentFlowId) {
+        setCurrentFlowId(data[0].id);
+      }
+    }
+  };
+
+  const loadFlowBoard = async (flowId: string) => {
     const { data, error } = await supabase
       .from("notes")
       .select("*")
-      .eq("user_id", user.id)
-      .eq("title", "__flowboard_data__")
+      .eq("id", flowId)
       .single();
 
     if (data && data.content) {
@@ -64,37 +95,49 @@ export const FlowBoard = () => {
     }
   };
 
-  const saveFlowBoard = async () => {
+  const createNewFlow = async () => {
+    if (!newFlowName.trim()) return;
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const flowData = { blocks };
+    const { data, error } = await supabase.from("notes").insert({
+      user_id: user.id,
+      title: newFlowName,
+      content: JSON.stringify({ blocks: [] }),
+      tags: ["fluxo-visual"],
+    }).select().single();
 
-    const { data: existing } = await supabase
-      .from("notes")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("title", "__flowboard_data__")
-      .single();
-
-    if (existing) {
-      await supabase
-        .from("notes")
-        .update({ content: JSON.stringify(flowData) })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("notes").insert({
-        user_id: user.id,
-        title: "__flowboard_data__",
-        content: JSON.stringify(flowData),
-        tags: ["__system__"],
+    if (data) {
+      setFlows([{ id: data.id, name: data.title, updated_at: data.updated_at }, ...flows]);
+      setCurrentFlowId(data.id);
+      setBlocks([]);
+      setNewFlowName("");
+      setIsCreateFlowOpen(false);
+      
+      toast({
+        title: "Fluxo criado!",
+        description: `"${newFlowName}" foi criado com sucesso.`,
       });
     }
+  };
+
+  const saveFlowBoard = async () => {
+    if (!currentFlowId) return;
+
+    const flowData = { blocks };
+
+    await supabase
+      .from("notes")
+      .update({ content: JSON.stringify(flowData) })
+      .eq("id", currentFlowId);
 
     toast({
       title: "Salvo!",
       description: "Seu fluxo foi salvo com sucesso.",
     });
+    
+    loadFlowsList();
   };
 
   const createBlock = () => {
@@ -165,11 +208,11 @@ export const FlowBoard = () => {
     const block = blocks.find(b => b.id === blockId);
     if (!block) return;
 
-    const startX = e.clientX - block.x;
-    const startY = e.clientY - block.y;
+    const startX = e.clientX / zoom - block.x;
+    const startY = e.clientY / zoom - block.y;
 
     const handleMouseMove = (e: MouseEvent) => {
-      updateBlockPosition(blockId, e.clientX - startX, e.clientY - startY);
+      updateBlockPosition(blockId, e.clientX / zoom - startX, e.clientY / zoom - startY);
     };
 
     const handleMouseUp = () => {
@@ -181,30 +224,107 @@ export const FlowBoard = () => {
     document.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY * -0.001;
+      const newZoom = Math.min(Math.max(0.3, zoom + delta), 3);
+      setZoom(newZoom);
+    }
+  };
+
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0 && (e.target as HTMLElement).classList.contains('flow-canvas')) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsPanning(false);
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Fluxos Visuais
-          </h2>
-          <p className="text-muted-foreground">
-            Crie e conecte blocos de ideias visualmente
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Fluxos Visuais
+            </h2>
+            <p className="text-muted-foreground">
+              Crie e conecte blocos de ideias visualmente
+            </p>
+          </div>
+          {flows.length > 0 && (
+            <Select value={currentFlowId || ""} onValueChange={setCurrentFlowId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Selecionar fluxo" />
+              </SelectTrigger>
+              <SelectContent>
+                {flows.map(flow => (
+                  <SelectItem key={flow.id} value={flow.id}>
+                    {flow.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={saveFlowBoard}>
+          <Dialog open={isCreateFlowOpen} onOpenChange={setIsCreateFlowOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Fluxo
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Novo Fluxo Visual</DialogTitle>
+                <DialogDescription>
+                  Como deseja nomear este fluxo visual?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Nome do fluxo (ex: Planejamento 2025)"
+                  value={newFlowName}
+                  onChange={(e) => setNewFlowName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && createNewFlow()}
+                />
+                <div className="flex gap-2">
+                  <Button onClick={createNewFlow} className="flex-1">
+                    Criar Fluxo
+                  </Button>
+                  <Button variant="outline" onClick={() => setIsCreateFlowOpen(false)} className="flex-1">
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Button variant="outline" onClick={saveFlowBoard} disabled={!currentFlowId}>
             <Save className="w-4 h-4 mr-2" />
             Salvar
           </Button>
-          <Button variant="outline" onClick={exportAsPNG}>
-            <Download className="w-4 h-4 mr-2" />
-            Exportar PNG
-          </Button>
+          
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!currentFlowId}>
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Bloco
               </Button>
@@ -238,13 +358,53 @@ export const FlowBoard = () => {
       </div>
 
       <Card className="shadow-xl border-primary/20">
-        <CardContent className="p-0">
+        <CardContent className="p-0 relative">
+          {/* Zoom Controls */}
+          <div className="absolute top-4 right-4 z-10 flex gap-2 bg-card/80 backdrop-blur-sm p-2 rounded-lg border">
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => setZoom(Math.max(0.3, zoom - 0.1))}
+              title="Diminuir zoom"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <span className="text-sm px-2 flex items-center">{Math.round(zoom * 100)}%</span>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => setZoom(Math.min(3, zoom + 0.1))}
+              title="Aumentar zoom"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={resetView}
+              title="Resetar visualização"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
+
           <div 
             ref={canvasRef}
-            className="relative w-full h-[600px] bg-gradient-to-br from-background to-primary/5 overflow-hidden rounded-lg"
+            className="flow-canvas relative w-full h-[600px] bg-gradient-to-br from-background to-primary/5 overflow-hidden rounded-lg cursor-grab active:cursor-grabbing"
+            onWheel={handleWheel}
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={handleCanvasMouseUp}
           >
             {/* Render connections */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <svg 
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                transformOrigin: '0 0'
+              }}
+            >
               {blocks.map(block => 
                 block.connections.map(targetId => {
                   const target = blocks.find(b => b.id === targetId);
@@ -279,16 +439,24 @@ export const FlowBoard = () => {
             </svg>
 
             {/* Render blocks */}
-            {blocks.map(block => (
-              <div
-                key={block.id}
-                className="absolute cursor-move group"
-                style={{
-                  left: `${block.x}px`,
-                  top: `${block.y}px`,
-                  width: "160px",
-                }}
-              >
+            <div 
+              style={{
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                transformOrigin: '0 0',
+                width: '100%',
+                height: '100%'
+              }}
+            >
+              {blocks.map(block => (
+                <div
+                  key={block.id}
+                  className="absolute cursor-move group"
+                  style={{
+                    left: `${block.x}px`,
+                    top: `${block.y}px`,
+                    width: "160px",
+                  }}
+                >
                 <Card
                   className="shadow-lg hover:shadow-xl transition-all border-2"
                   style={{ borderColor: block.color }}
@@ -323,6 +491,19 @@ export const FlowBoard = () => {
                         className="h-6 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setSelectedBlock(block);
+                          setIsBlockDetailOpen(true);
+                        }}
+                      >
+                        <Eye className="w-3 h-3 mr-1" />
+                        Ver
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setConnectingFrom(connectingFrom === block.id ? null : block.id);
                         }}
                       >
@@ -343,9 +524,23 @@ export const FlowBoard = () => {
                   </CardContent>
                 </Card>
               </div>
-            ))}
+              ))}
+            </div>
 
-            {blocks.length === 0 && (
+            {blocks.length === 0 && !currentFlowId && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center space-y-2">
+                  <p className="text-muted-foreground">
+                    Nenhum fluxo selecionado
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Crie um novo fluxo para começar
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {blocks.length === 0 && currentFlowId && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center space-y-2">
                   <p className="text-muted-foreground">
@@ -366,6 +561,69 @@ export const FlowBoard = () => {
           Clique em outro bloco para conectar
         </Badge>
       )}
+
+      {/* Block Detail Modal */}
+      <Dialog open={isBlockDetailOpen} onOpenChange={setIsBlockDetailOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div 
+                className="w-4 h-4 rounded"
+                style={{ backgroundColor: selectedBlock?.color }}
+              />
+              {selectedBlock?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedBlock?.content && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Conteúdo:</h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {selectedBlock.content}
+                </p>
+              </div>
+            )}
+            
+            {selectedBlock?.connections && selectedBlock.connections.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Conexões:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBlock.connections.map(connId => {
+                    const connectedBlock = blocks.find(b => b.id === connId);
+                    return connectedBlock ? (
+                      <Badge 
+                        key={connId} 
+                        variant="outline"
+                        style={{ borderColor: connectedBlock.color }}
+                      >
+                        {connectedBlock.title}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsBlockDetailOpen(false);
+                  setTimeout(() => {
+                    if (selectedBlock) {
+                      deleteBlock(selectedBlock.id);
+                    }
+                  }, 200);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir Bloco
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
