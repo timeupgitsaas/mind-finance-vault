@@ -9,6 +9,8 @@ import Auth from "./pages/Auth";
 import Finance from "./pages/Finance";
 import Notes from "./pages/Notes";
 import MindMap from "./pages/MindMap";
+import Statistics from "./pages/Statistics";
+import Diary from "./pages/Diary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
           <Route path="/finance" element={<Finance />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/mindmap" element={<MindMap />} />
+          <Route path="/statistics" element={<Statistics />} />
+          <Route path="/diary" element={<Diary />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

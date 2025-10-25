@@ -17,6 +17,8 @@ import {
   Brain,
   Moon,
   Sun,
+  BookOpen,
+  BarChart3,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 
@@ -64,6 +66,14 @@ export function CommandPalette() {
           <CommandItem onSelect={() => runCommand(() => navigate("/mindmap"))}>
             <Network className="mr-2 h-4 w-4" />
             <span>Mapa Mental</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => navigate("/diary"))}>
+            <BookOpen className="mr-2 h-4 w-4" />
+            <span>Diário</span>
+          </CommandItem>
+          <CommandItem onSelect={() => runCommand(() => navigate("/statistics"))}>
+            <BarChart3 className="mr-2 h-4 w-4" />
+            <span>Estatísticas</span>
           </CommandItem>
         </CommandGroup>
 

@@ -10,7 +10,9 @@ import {
   FileText, 
   Network, 
   LogOut,
-  Sparkles 
+  Sparkles,
+  BookOpen,
+  BarChart3
 } from "lucide-react";
 
 const Navbar = () => {
@@ -30,6 +32,8 @@ const Navbar = () => {
     { path: "/finance", icon: Wallet, label: "Finanças" },
     { path: "/notes", icon: FileText, label: "Notas" },
     { path: "/mindmap", icon: Network, label: "Mapa Mental" },
+    { path: "/diary", icon: BookOpen, label: "Diário" },
+    { path: "/statistics", icon: BarChart3, label: "Estatísticas" },
   ];
 
   return (

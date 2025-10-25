@@ -71,6 +71,45 @@ export type Database = {
         }
         Relationships: []
       }
+      diary_entries: {
+        Row: {
+          content: string
+          created_at: string | null
+          date: string
+          folder_ids: string[] | null
+          id: string
+          mood: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string | null
+          date?: string
+          folder_ids?: string[] | null
+          id?: string
+          mood?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          date?: string
+          folder_ids?: string[] | null
+          id?: string
+          mood?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       exports: {
         Row: {
           created_at: string | null
@@ -139,6 +178,39 @@ export type Database = {
           },
         ]
       }
+      folders: {
+        Row: {
+          color: string | null
+          content_types: string[] | null
+          created_at: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          content_types?: string[] | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          content_types?: string[] | null
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       google_tokens: {
         Row: {
           access_token: string
@@ -178,6 +250,7 @@ export type Database = {
           color: string | null
           content: string
           created_at: string
+          folder_ids: string[] | null
           id: string
           linked_notes: string[] | null
           manual_connections: string[] | null
@@ -191,6 +264,7 @@ export type Database = {
           color?: string | null
           content?: string
           created_at?: string
+          folder_ids?: string[] | null
           id?: string
           linked_notes?: string[] | null
           manual_connections?: string[] | null
@@ -204,6 +278,7 @@ export type Database = {
           color?: string | null
           content?: string
           created_at?: string
+          folder_ids?: string[] | null
           id?: string
           linked_notes?: string[] | null
           manual_connections?: string[] | null
@@ -316,6 +391,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_statistics: {
+        Row: {
+          characters_written: number | null
+          connections_created: number | null
+          created_at: string | null
+          date: string
+          hour_of_day: number | null
+          id: string
+          items_created: number | null
+          module: string
+          time_spent_minutes: number | null
+          updated_at: string | null
+          user_id: string
+          words_written: number | null
+        }
+        Insert: {
+          characters_written?: number | null
+          connections_created?: number | null
+          created_at?: string | null
+          date?: string
+          hour_of_day?: number | null
+          id?: string
+          items_created?: number | null
+          module: string
+          time_spent_minutes?: number | null
+          updated_at?: string | null
+          user_id: string
+          words_written?: number | null
+        }
+        Update: {
+          characters_written?: number | null
+          connections_created?: number | null
+          created_at?: string | null
+          date?: string
+          hour_of_day?: number | null
+          id?: string
+          items_created?: number | null
+          module?: string
+          time_spent_minutes?: number | null
+          updated_at?: string | null
+          user_id?: string
+          words_written?: number | null
+        }
+        Relationships: []
       }
     }
     Views: {
