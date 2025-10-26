@@ -119,7 +119,7 @@ const Finance = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Navbar />
       
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">

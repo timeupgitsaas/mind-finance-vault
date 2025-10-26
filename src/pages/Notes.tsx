@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { useStatistics } from "@/hooks/useStatistics";
 import Navbar from "@/components/Navbar";
+import { FolderSidebar } from "@/components/FolderSidebar";
 import { NoteSuggestions } from "@/components/NoteSuggestions";
 import { AILoader } from "@/components/AILoader";
 import { FlowBoard } from "@/components/FlowBoard";
@@ -25,6 +27,7 @@ interface Note {
   updated_at: string;
   manual_connections?: string[];
   ai_suggested_connections?: string[];
+  folder_ids?: string[];
   color?: string;
 }
 
@@ -37,7 +40,9 @@ const Notes = () => {
   const [isCorrecting, setIsCorrecting] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [activeTab, setActiveTab] = useState("notes");
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { trackActivity } = useStatistics("notes");
   const navigate = useNavigate();
 
   // Form state
@@ -98,12 +103,14 @@ const Notes = () => {
     if (!user) return;
 
     const tagsArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
+    const folderIds = selectedFolderId ? [selectedFolderId] : [];
 
     const { error } = await supabase.from("notes").insert({
       user_id: user.id,
       title: title || "Nova Nota",
       content,
       tags: tagsArray,
+      folder_ids: folderIds,
     });
 
     if (error) {
@@ -116,6 +123,11 @@ const Notes = () => {
       toast({
         title: "Nota criada!",
         description: "Sua nota foi salva com sucesso.",
+      });
+      trackActivity({ 
+        charactersWritten: content.length, 
+        wordsWritten: content.split(/\s+/).length, 
+        itemsCreated: 1 
       });
       setTitle("");
       setContent("");
@@ -205,7 +217,15 @@ const Notes = () => {
     }
   };
 
-  const filteredNotes = notes.filter(
+  let filteredNotes = notes;
+  
+  if (selectedFolderId) {
+    filteredNotes = filteredNotes.filter((note) => 
+      note.folder_ids?.includes(selectedFolderId)
+    );
+  }
+  
+  filteredNotes = filteredNotes.filter(
     (note) =>
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -312,10 +332,17 @@ const Notes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex">
+      <FolderSidebar 
+        selectedFolderId={selectedFolderId}
+        onFolderSelect={setSelectedFolderId}
+        contentType="notes"
+      />
       
-      <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+      <div className="flex-1 flex flex-col min-w-0">
+        <Navbar />
+        
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -542,6 +569,7 @@ const Notes = () => {
           </Card>
         </TabsContent>
       </Tabs>
+        </div>
       </div>
     </div>
   );

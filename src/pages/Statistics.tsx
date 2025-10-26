@@ -4,11 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Clock, Brain, Flame, Trophy, FileText, Network, Calendar } from "lucide-react";
+import Navbar from "@/components/Navbar";
+import { FolderSidebar } from "@/components/FolderSidebar";
 
 type Period = "month" | "year" | "all";
 
 export default function Statistics() {
   const [period, setPeriod] = useState<Period>("month");
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [stats, setStats] = useState<any>({
     totalTime: 0,
     totalIdeas: 0,
@@ -170,7 +173,17 @@ export default function Statistics() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex">
+      <FolderSidebar 
+        selectedFolderId={selectedFolderId}
+        onFolderSelect={setSelectedFolderId}
+        contentType="notes"
+      />
+      
+      <div className="flex-1 flex flex-col min-w-0">
+        <Navbar />
+        
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -348,6 +361,8 @@ export default function Statistics() {
             </div>
           </CardContent>
         </Card>
+      </div>
+        </div>
       </div>
     </div>
   );

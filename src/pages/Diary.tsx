@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Save, Trash2, BookOpen, Smile, Meh, Frown, SmilePlus, AngryIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStatistics } from "@/hooks/useStatistics";
 import { FolderSidebar } from "@/components/FolderSidebar";
+import Navbar from "@/components/Navbar";
 
 interface DiaryEntry {
   id: string;
@@ -134,14 +134,17 @@ export default function Diary() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <FolderSidebar
         selectedFolderId={selectedFolderId}
         onFolderSelect={setSelectedFolderId}
         contentType="diary"
       />
 
-      <div className="flex-1 container mx-auto p-6 space-y-6">
+      <div className="flex-1 flex flex-col min-w-0">
+        <Navbar />
+        
+        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2">
@@ -276,6 +279,7 @@ export default function Diary() {
             )}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
