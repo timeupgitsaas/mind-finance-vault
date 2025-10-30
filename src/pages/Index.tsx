@@ -10,6 +10,7 @@ import { RecurringTransactions } from "@/components/RecurringTransactions";
 import { AIInsights } from "@/components/AIInsights";
 import { AIChat } from "@/components/AIChat";
 import { CommandPalette } from "@/components/CommandPalette";
+import { DashboardStats } from "@/components/DashboardStats";
 import { 
   Wallet, 
   FileText, 
@@ -125,6 +126,8 @@ const Index = () => {
           </h1>
           <p className="text-muted-foreground">Organização Inteligente de Ideias</p>
         </div>
+
+        <DashboardStats />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="shadow-md hover:shadow-lg transition-shadow">

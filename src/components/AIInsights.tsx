@@ -132,12 +132,20 @@ export function AIInsights() {
         </Tabs>
 
         {insights && (
-          <div className="mt-4 p-4 bg-secondary rounded-lg">
-            <h4 className="font-semibold mb-2 flex items-center gap-2">
-              <Brain className="w-4 h-4" />
+          <div className="mt-4 p-4 bg-gradient-to-br from-secondary to-secondary/80 rounded-lg border border-border/50 shadow-md">
+            <h4 className="font-semibold mb-3 flex items-center gap-2">
+              <Brain className="w-4 h-4 text-primary" />
               Análise da IA
             </h4>
-            <p className="text-sm whitespace-pre-wrap">{insights}</p>
+            <div className="text-sm leading-relaxed space-y-2">
+              {insights.split('\n').map((paragraph, idx) => (
+                paragraph.trim() && (
+                  <p key={idx} className="whitespace-pre-wrap">
+                    {paragraph}
+                  </p>
+                )
+              ))}
+            </div>
           </div>
         )}
       </CardContent>

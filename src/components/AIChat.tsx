@@ -161,15 +161,25 @@ export function AIChat() {
                   {currentMessages.map((msg, idx) => (
                     <div
                       key={idx}
-                      className={`p-3 rounded-lg transition-all hover:scale-[1.02] ${
+                      className={`p-4 rounded-lg transition-all ${
                         msg.role === "user"
-                          ? "bg-primary text-primary-foreground ml-8 shadow-primary"
-                          : "bg-secondary mr-8 shadow-sm"
+                          ? "bg-primary text-primary-foreground ml-8 shadow-lg"
+                          : "bg-gradient-to-br from-secondary to-secondary/80 mr-8 shadow-md border border-border/50"
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                      <p className="text-xs opacity-60 mt-1">
-                        {new Date(msg.timestamp).toLocaleTimeString("pt-BR")}
+                      <div className="text-sm leading-relaxed space-y-2">
+                        {msg.content.split('\n').map((paragraph, pIdx) => (
+                          paragraph.trim() && (
+                            <p key={pIdx} className="whitespace-pre-wrap">
+                              {paragraph}
+                            </p>
+                          )
+                        ))}
+                      </div>
+                      <p className="text-xs opacity-60 mt-2 flex items-center gap-1">
+                        <span className={msg.role === "user" ? "text-primary-foreground/80" : "text-muted-foreground"}>
+                          {new Date(msg.timestamp).toLocaleTimeString("pt-BR")}
+                        </span>
                       </p>
                     </div>
                   ))}

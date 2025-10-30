@@ -49,6 +49,7 @@ const MindMap = () => {
   const [filterTag, setFilterTag] = useState("");
   const [allTags, setAllTags] = useState<string[]>([]);
   const [connectMode, setConnectMode] = useState(false);
+  const [disconnectMode, setDisconnectMode] = useState(false);
   const [selectedNodeForConnection, setSelectedNodeForConnection] = useState<string | null>(null);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [groupByFolder, setGroupByFolder] = useState(false);
@@ -378,18 +379,30 @@ const MindMap = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="relative">
-                <div className="w-full h-[calc(100vh-400px)] min-h-[500px] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-none">
+                 <div className="w-full h-[calc(100vh-400px)] min-h-[500px] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-none">
                   <MindMapControls
                     zoom={zoom}
                     onZoomIn={handleZoomIn}
                     onZoomOut={handleZoomOut}
                     onReset={handleReset}
                     onFit={handleFit}
+                    onDisconnect={() => {
+                      setDisconnectMode(!disconnectMode);
+                      setConnectMode(false);
+                      setSelectedNodeForConnection(null);
+                      toast({
+                        title: disconnectMode ? "Modo desconectar desativado" : "Modo desconectar ativado",
+                        description: disconnectMode ? "Volte ao modo normal" : "Clique em uma conexão manual para removê-la",
+                      });
+                    }}
+                    disconnectMode={disconnectMode}
                   />
                   
                   <ForceGraph2D
                     ref={fgRef}
                     graphData={graphData}
+                    width={1200}
+                    height={600}
                     nodeLabel="name"
                     nodeColor="color"
                     linkColor={(link: any) => 

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ZoomIn, ZoomOut, Maximize2, Minimize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, Minimize2, Link2Off } from "lucide-react";
 
 interface MindMapControlsProps {
   zoom: number;
@@ -7,9 +7,19 @@ interface MindMapControlsProps {
   onZoomOut: () => void;
   onReset: () => void;
   onFit: () => void;
+  onDisconnect?: () => void;
+  disconnectMode?: boolean;
 }
 
-export const MindMapControls = ({ zoom, onZoomIn, onZoomOut, onReset, onFit }: MindMapControlsProps) => {
+export const MindMapControls = ({ 
+  zoom, 
+  onZoomIn, 
+  onZoomOut, 
+  onReset, 
+  onFit,
+  onDisconnect,
+  disconnectMode 
+}: MindMapControlsProps) => {
   return (
     <div className="absolute top-4 right-4 flex items-center gap-2 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-2 shadow-lg z-10">
       <Button
@@ -57,6 +67,22 @@ export const MindMapControls = ({ zoom, onZoomIn, onZoomOut, onReset, onFit }: M
       >
         <Minimize2 className="h-4 w-4" />
       </Button>
+
+      {onDisconnect && (
+        <>
+          <div className="w-px h-6 bg-border" />
+          
+          <Button
+            variant={disconnectMode ? "default" : "ghost"}
+            size="icon"
+            onClick={onDisconnect}
+            title="Desconectar Nós"
+            className="h-8 w-8"
+          >
+            <Link2Off className="h-4 w-4" />
+          </Button>
+        </>
+      )}
     </div>
   );
 };
