@@ -201,7 +201,7 @@ const MindMap = () => {
   const handleZoomIn = () => {
     if (fgRef.current && zoom < 3) {
       const newZoom = Math.min(zoom + 0.2, 3);
-      fgRef.current.zoom(newZoom);
+      fgRef.current.zoom(newZoom, 400);
       setZoom(newZoom);
     }
   };
@@ -209,15 +209,15 @@ const MindMap = () => {
   const handleZoomOut = () => {
     if (fgRef.current && zoom > 0.3) {
       const newZoom = Math.max(zoom - 0.2, 0.3);
-      fgRef.current.zoom(newZoom);
+      fgRef.current.zoom(newZoom, 400);
       setZoom(newZoom);
     }
   };
 
   const handleReset = () => {
     if (fgRef.current) {
-      fgRef.current.zoom(1);
-      fgRef.current.centerAt(0, 0, 1000);
+      fgRef.current.zoom(1, 400);
+      fgRef.current.centerAt(0, 0, 400);
       setZoom(1);
     }
   };
@@ -225,6 +225,8 @@ const MindMap = () => {
   const handleFit = () => {
     if (fgRef.current) {
       fgRef.current.zoomToFit(400, 50);
+      const currentZoom = fgRef.current.zoom();
+      setZoom(currentZoom);
     }
   };
 
@@ -259,6 +261,27 @@ const MindMap = () => {
     }
     setSelectedNodeForConnection(null);
     setConnectMode(false);
+  };
+
+  const handleDisconnect = async (sourceId: string, targetId: string) => {
+    const sourceNote = notes.find(n => n.id === sourceId);
+    if (sourceNote) {
+      const currentConnections = sourceNote.manual_connections || [];
+      const updatedConnections = currentConnections.filter(id => id !== targetId);
+      
+      await supabase
+        .from("notes")
+        .update({
+          manual_connections: updatedConnections
+        })
+        .eq("id", sourceId);
+      
+      toast({
+        title: "🔗 Conexão Removida",
+        description: "A conexão foi removida com sucesso",
+      });
+      fetchNotes();
+    }
   };
 
   return (
@@ -355,7 +378,7 @@ const MindMap = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="relative">
-                <div className="w-full h-[calc(100vh-400px)] min-h-[500px] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative">
+                <div className="w-full h-[calc(100vh-400px)] min-h-[500px] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-none">
                   <MindMapControls
                     zoom={zoom}
                     onZoomIn={handleZoomIn}
@@ -381,7 +404,16 @@ const MindMap = () => {
                     d3AlphaDecay={0.02}
                     d3VelocityDecay={0.3}
                     cooldownTicks={100}
-                    onEngineStop={() => fgRef.current && fgRef.current.zoomToFit(400, 50)}
+                    enableNodeDrag={true}
+                    enableZoomInteraction={true}
+                    enablePanInteraction={true}
+                    onEngineStop={() => {
+                      if (fgRef.current) {
+                        fgRef.current.zoomToFit(400, 50);
+                        const currentZoom = fgRef.current.zoom();
+                        setZoom(currentZoom);
+                      }
+                    }}
                     nodeCanvasObject={(node: any, ctx, globalScale) => {
                       const label = node.name;
                       const maxWidth = 250;
@@ -451,14 +483,37 @@ const MindMap = () => {
                       }
                     }}
                     onNodeRightClick={(node: any) => {
-                      // Abrir menu de contexto para desconectar
                       const note = notes.find((n) => n.id === node.id);
                       if (note && note.manual_connections && note.manual_connections.length > 0) {
-                        // Mostrar opções de desconexão
+                        const connectionsText = note.manual_connections
+                          .map(connId => {
+                            const connNote = notes.find(n => n.id === connId);
+                            return connNote ? connNote.title : 'Nota desconhecida';
+                          })
+                          .join(', ');
+                        
                         toast({
-                          title: "Desconectar nota?",
-                          description: "Use o modo Conectar para gerenciar conexões",
+                          title: "Gerenciar Conexões",
+                          description: `Esta nota está conectada a: ${connectionsText}. Ative o modo Conectar e clique novamente para remover conexões.`,
                         });
+                      }
+                    }}
+                    onLinkClick={(link: any) => {
+                      if (link.type === "manual") {
+                        const sourceNote = notes.find(n => n.id === link.source.id || n.id === link.source);
+                        const targetNote = notes.find(n => n.id === link.target.id || n.id === link.target);
+                        
+                        if (sourceNote && targetNote) {
+                          const confirmed = window.confirm(
+                            `Deseja remover a conexão entre "${truncateText(sourceNote.title, 30)}" e "${truncateText(targetNote.title, 30)}"?`
+                          );
+                          
+                          if (confirmed) {
+                            const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+                            const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+                            handleDisconnect(sourceId, targetId);
+                          }
+                        }
                       }
                     }}
                     onZoom={(zoom: any) => setZoom(zoom.k)}
