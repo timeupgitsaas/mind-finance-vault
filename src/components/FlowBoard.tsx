@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Save, Download, Trash2, Edit2, Grip, ZoomIn, ZoomOut, Maximize2, Eye } from "lucide-react";
+import { Plus, Save, Download, Trash2, Edit2, Grip, ZoomIn, ZoomOut, Maximize2, Eye, FolderInput, Upload } from "lucide-react";
+import { ImportExportButtons } from "@/components/ImportExportButtons";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -197,6 +198,24 @@ export const FlowBoard = () => {
     setConnectingFrom(null);
   };
 
+  const handleDisconnect = (blockId: string, targetId: string) => {
+    setBlocks(blocks.map(b => {
+      if (b.id === blockId) {
+        return { ...b, connections: b.connections.filter(id => id !== targetId) };
+      }
+      return b;
+    }));
+
+    toast({
+      title: "🔗 Desconectado!",
+      description: "Conexão removida com sucesso.",
+    });
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
   const exportAsPNG = async () => {
     toast({
       title: "Exportando...",
@@ -321,6 +340,8 @@ export const FlowBoard = () => {
             <Save className="w-4 h-4 mr-2" />
             Salvar
           </Button>
+          
+          <ImportExportButtons module="flows" />
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -470,18 +491,22 @@ export const FlowBoard = () => {
                     className="p-3 cursor-grab active:cursor-grabbing"
                     style={{ backgroundColor: `${block.color}20` }}
                     onMouseDown={(e) => startDragging(e, block.id)}
+                    title={block.title}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <CardTitle className="text-sm font-semibold line-clamp-2">
-                        {block.title}
+                        {truncateText(block.title, 40)}
                       </CardTitle>
                       <Grip className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </CardHeader>
                   <CardContent className="p-3 space-y-2">
                     {block.content && (
-                      <p className="text-xs text-muted-foreground line-clamp-3">
-                        {block.content}
+                      <p 
+                        className="text-xs text-muted-foreground line-clamp-3" 
+                        title={block.content}
+                      >
+                        {truncateText(block.content, 150)}
                       </p>
                     )}
                     <div className="flex gap-1">
@@ -591,13 +616,23 @@ export const FlowBoard = () => {
                   {selectedBlock.connections.map(connId => {
                     const connectedBlock = blocks.find(b => b.id === connId);
                     return connectedBlock ? (
-                      <Badge 
-                        key={connId} 
-                        variant="outline"
-                        style={{ borderColor: connectedBlock.color }}
-                      >
-                        {connectedBlock.title}
-                      </Badge>
+                      <div key={connId} className="flex items-center gap-1">
+                        <Badge 
+                          variant="outline"
+                          style={{ borderColor: connectedBlock.color }}
+                        >
+                          {connectedBlock.title}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleDisconnect(selectedBlock.id, connId)}
+                          title="Remover conexão"
+                        >
+                          ✕
+                        </Button>
+                      </div>
                     ) : null;
                   })}
                 </div>

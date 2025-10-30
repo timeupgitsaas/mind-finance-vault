@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { CreateFolderModal } from "./CreateFolderModal";
+import { FolderManagement } from "./FolderManagement";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 interface Folder {
@@ -25,6 +27,7 @@ export const FolderSidebar = ({ selectedFolderId, onFolderSelect, contentType }:
   const [folders, setFolders] = useState<Folder[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isManaging, setIsManaging] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const { toast } = useToast();
 
@@ -122,46 +125,64 @@ export const FolderSidebar = ({ selectedFolderId, onFolderSelect, contentType }:
       <div className="w-64 border-r bg-card flex flex-col">
         <div className="p-4 border-b flex items-center justify-between">
           <h3 className="font-semibold text-sm">📁 MINHAS PASTAS</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(true)}
-            title="Recolher pastas"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsManaging(!isManaging)}
+              title="Gerenciar pastas"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setIsCollapsed(true)}
+              title="Recolher pastas"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-2 space-y-1">
-            {/* Todas */}
-            <Button
-              variant={selectedFolderId === null ? "secondary" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => onFolderSelect(null)}
-            >
-              <span className="mr-2">📊</span>
-              <span className="flex-1 text-left">Todas</span>
-              <span className="text-xs text-muted-foreground">({totalCount})</span>
-            </Button>
-
-            {/* Lista de pastas */}
-            {folders.map((folder) => (
+          {isManaging ? (
+            <div className="p-4">
+              <FolderManagement folders={folders} onRefresh={loadFolders} />
+            </div>
+          ) : (
+            <div className="p-2 space-y-1">
+              {/* Todas */}
               <Button
-                key={folder.id}
-                variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
+                variant={selectedFolderId === null ? "secondary" : "ghost"}
                 className="w-full justify-start"
-                onClick={() => onFolderSelect(folder.id)}
-                style={{
-                  borderLeft: selectedFolderId === folder.id ? `3px solid ${folder.color}` : "none",
-                }}
+                onClick={() => onFolderSelect(null)}
               >
-                <span className="mr-2">{folder.icon}</span>
-                <span className="flex-1 text-left truncate">{folder.name}</span>
-                <span className="text-xs text-muted-foreground">({folder.count || 0})</span>
+                <span className="mr-2">📊</span>
+                <span className="flex-1 text-left">Todas</span>
+                <Badge variant="secondary" className="text-xs">{totalCount}</Badge>
               </Button>
-            ))}
-          </div>
+
+              {/* Lista de pastas */}
+              {folders.map((folder) => (
+                <Button
+                  key={folder.id}
+                  variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
+                  className="w-full justify-start"
+                  onClick={() => onFolderSelect(folder.id)}
+                  style={{
+                    borderLeft: selectedFolderId === folder.id ? `3px solid ${folder.color}` : "none",
+                  }}
+                >
+                  <span className="mr-2">{folder.icon}</span>
+                  <span className="flex-1 text-left truncate">{folder.name}</span>
+                  <Badge variant="secondary" className="text-xs">{folder.count || 0}</Badge>
+                </Button>
+              ))}
+            </div>
+          )}
         </ScrollArea>
 
         <div className="p-2 border-t">

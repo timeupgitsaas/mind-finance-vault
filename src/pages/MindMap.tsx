@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Network, Download, Filter, Link2, Globe, FolderOpen } from "lucide-react";
+import { ImportExportButtons } from "@/components/ImportExportButtons";
 import ForceGraph2D from "react-force-graph-2d";
 
 interface Note {
@@ -227,6 +228,39 @@ const MindMap = () => {
     }
   };
 
+  const truncateText = (text: string, maxLength: number) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
+  const handleConnect = async (toId: string) => {
+    if (!selectedNodeForConnection || selectedNodeForConnection === toId) {
+      setSelectedNodeForConnection(null);
+      return;
+    }
+
+    const sourceNote = notes.find(n => n.id === selectedNodeForConnection);
+    if (sourceNote) {
+      const currentConnections = sourceNote.manual_connections || [];
+      if (!currentConnections.includes(toId)) {
+        await supabase
+          .from("notes")
+          .update({
+            manual_connections: [...currentConnections, toId]
+          })
+          .eq("id", selectedNodeForConnection);
+        
+        toast({
+          title: "✨ Conexão Criada!",
+          description: "As notas foram conectadas com sucesso",
+        });
+        trackActivity({ connectionsCreated: 1 });
+        fetchNotes();
+      }
+    }
+    setSelectedNodeForConnection(null);
+    setConnectMode(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex">
       <FolderSidebar 
@@ -269,10 +303,7 @@ const MindMap = () => {
                 <Link2 className="h-4 w-4" />
                 {connectMode ? "Cancelar" : "Conectar"}
               </Button>
-              <Button onClick={exportData} variant="outline" className="gap-2">
-                <Download className="h-4 w-4" />
-                Exportar
-              </Button>
+              <ImportExportButtons module="notes" />
             </div>
           </div>
 
@@ -358,7 +389,7 @@ const MindMap = () => {
                       ctx.font = `bold ${fontSize}px Sans-Serif`;
                       
                       // Truncate text if too long
-                      const truncatedLabel = label.length > 30 ? label.substring(0, 30) + "..." : label;
+                      const truncatedLabel = truncateText(label, 40);
                       const textWidth = Math.min(ctx.measureText(truncatedLabel).width, maxWidth / globalScale);
 
                       // Draw node circle with enhanced glow
@@ -404,44 +435,30 @@ const MindMap = () => {
                           setSelectedNodeForConnection(node.id);
                           toast({
                             title: "Primeira nota selecionada",
-                            description: `"${node.name}" - Clique em outra para conectar`,
+                            description: `"${truncateText(node.name, 30)}" - Clique em outra para conectar`,
                           });
                         } else {
-                          const sourceNote = notes.find(n => n.id === selectedNodeForConnection);
-                          if (sourceNote && node.id !== selectedNodeForConnection) {
-                            const currentConnections = sourceNote.manual_connections || [];
-                            if (!currentConnections.includes(node.id)) {
-                              await supabase
-                                .from("notes")
-                                .update({
-                                  manual_connections: [...currentConnections, node.id]
-                                })
-                                .eq("id", selectedNodeForConnection);
-                              
-                              toast({
-                                title: "✨ Conexão Criada!",
-                                description: "As notas foram conectadas com sucesso",
-                              });
-                              trackActivity({ connectionsCreated: 1 });
-                              fetchNotes();
-                            } else {
-                              toast({
-                                title: "Conexão já existe",
-                                variant: "destructive",
-                              });
-                            }
-                          }
-                          setSelectedNodeForConnection(null);
-                          setConnectMode(false);
+                          await handleConnect(node.id);
                         }
                       } else {
                         const note = notes.find((n) => n.id === node.id);
                         if (note) {
                           toast({
-                            title: note.title,
-                            description: `${note.content.substring(0, 150)}${note.content.length > 150 ? "..." : ""}`,
+                            title: truncateText(note.title, 40),
+                            description: truncateText(note.content, 150),
                           });
                         }
+                      }
+                    }}
+                    onNodeRightClick={(node: any) => {
+                      // Abrir menu de contexto para desconectar
+                      const note = notes.find((n) => n.id === node.id);
+                      if (note && note.manual_connections && note.manual_connections.length > 0) {
+                        // Mostrar opções de desconexão
+                        toast({
+                          title: "Desconectar nota?",
+                          description: "Use o modo Conectar para gerenciar conexões",
+                        });
                       }
                     }}
                     onZoom={(zoom: any) => setZoom(zoom.k)}
