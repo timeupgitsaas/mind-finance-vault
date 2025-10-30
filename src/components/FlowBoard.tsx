@@ -10,6 +10,7 @@ import { Plus, Save, Download, Trash2, Edit2, Grip, ZoomIn, ZoomOut, Maximize2, 
 import { ImportExportButtons } from "@/components/ImportExportButtons";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface FlowBlock {
   id: string;
@@ -38,8 +39,11 @@ export const FlowBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreateFlowOpen, setIsCreateFlowOpen] = useState(false);
   const [isBlockDetailOpen, setIsBlockDetailOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingBlock, setEditingBlock] = useState<FlowBlock | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editColor, setEditColor] = useState("#8B5CF6");
   const [newFlowName, setNewFlowName] = useState("");
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -128,18 +132,36 @@ export const FlowBoard = () => {
 
     const flowData = { blocks };
 
-    await supabase
+    const { error } = await supabase
       .from("notes")
       .update({ content: JSON.stringify(flowData) })
       .eq("id", currentFlowId);
 
-    toast({
-      title: "Salvo!",
-      description: "Seu fluxo foi salvo com sucesso.",
-    });
-    
-    loadFlowsList();
+    if (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "✅ Salvo!",
+        description: "Seu fluxo foi salvo com sucesso.",
+      });
+      loadFlowsList();
+    }
   };
+
+  // Auto-save effect
+  useEffect(() => {
+    if (currentFlowId && blocks.length > 0) {
+      const timeoutId = setTimeout(() => {
+        saveFlowBoard();
+      }, 2000);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [blocks, currentFlowId]);
 
   const createBlock = () => {
     if (!editTitle.trim()) return;
@@ -166,10 +188,42 @@ export const FlowBoard = () => {
   };
 
   const deleteBlock = (id: string) => {
-    setBlocks(blocks.filter(b => b.id !== id));
+    setBlocks(blocks.filter(b => b.id !== id).map(b => ({
+      ...b,
+      connections: b.connections.filter(connId => connId !== id)
+    })));
     toast({
-      title: "Bloco removido",
+      title: "🗑️ Bloco removido",
       description: "O bloco foi excluído do fluxo.",
+    });
+  };
+
+  const openEditDialog = (block: FlowBlock) => {
+    setEditingBlock(block);
+    setEditTitle(block.title);
+    setEditContent(block.content);
+    setEditColor(block.color);
+    setIsEditDialogOpen(true);
+  };
+
+  const saveBlockEdit = () => {
+    if (!editingBlock || !editTitle.trim()) return;
+
+    setBlocks(blocks.map(b => 
+      b.id === editingBlock.id 
+        ? { ...b, title: editTitle, content: editContent, color: editColor }
+        : b
+    ));
+
+    setEditingBlock(null);
+    setEditTitle("");
+    setEditContent("");
+    setEditColor("#8B5CF6");
+    setIsEditDialogOpen(false);
+
+    toast({
+      title: "✏️ Bloco atualizado!",
+      description: "As alterações foram salvas.",
     });
   };
 
@@ -516,6 +570,18 @@ export const FlowBoard = () => {
                         className="h-6 text-xs"
                         onClick={(e) => {
                           e.stopPropagation();
+                          openEditDialog(block);
+                        }}
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setSelectedBlock(block);
                           setIsBlockDetailOpen(true);
                         }}
@@ -532,7 +598,7 @@ export const FlowBoard = () => {
                           setConnectingFrom(connectingFrom === block.id ? null : block.id);
                         }}
                       >
-                        {connectingFrom === block.id ? "Cancelar" : "Conectar"}
+                        {connectingFrom === block.id ? "❌" : "🔗"}
                       </Button>
                       <Button
                         variant="ghost"

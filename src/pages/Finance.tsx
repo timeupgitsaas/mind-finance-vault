@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -93,7 +93,8 @@ const Finance = () => {
     }
   };
 
-  const calculateTotals = () => {
+  // Memoized calculations for performance
+  const totals = useMemo(() => {
     const income = transactions
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + Number(t.amount), 0);
@@ -102,16 +103,25 @@ const Finance = () => {
       .filter((t) => t.type === "expense")
       .reduce((sum, t) => sum + Number(t.amount), 0);
     
-    return { income, expense, balance: income - expense };
-  };
+    return { 
+      income: Math.round(income * 100) / 100, 
+      expense: Math.round(expense * 100) / 100, 
+      balance: Math.round((income - expense) * 100) / 100 
+    };
+  }, [transactions]);
 
-  const totals = calculateTotals();
+  const chartData = useMemo(() => {
+    return transactions.slice(0, 10).reverse().map((t) => ({
+      name: t.title.length > 15 ? t.title.substring(0, 15) + "..." : t.title,
+      Valor: Math.round(Number(t.amount) * 100) / 100,
+      fill: t.type === "income" ? "hsl(var(--success))" : "hsl(var(--destructive))",
+    }));
+  }, [transactions]);
 
-  const chartData = transactions.slice(0, 10).map((t) => ({
-    name: t.title,
-    value: Number(t.amount),
-    type: t.type,
-  }));
+  const pieData = useMemo(() => [
+    { name: "Receitas", value: totals.income },
+    { name: "Despesas", value: totals.expense },
+  ], [totals]);
 
   const COLORS = {
     income: "hsl(var(--success))",
@@ -288,11 +298,22 @@ const Finance = () => {
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                      />
+                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                        formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                      />
+                      <Bar dataKey="Valor" radius={[8, 8, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -306,14 +327,11 @@ const Finance = () => {
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
-                        data={[
-                          { name: "Receitas", value: totals.income },
-                          { name: "Despesas", value: totals.expense },
-                        ]}
+                        data={pieData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label
+                        label={({ name, value }) => `${name}: R$ ${value.toFixed(2)}`}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
@@ -321,7 +339,14 @@ const Finance = () => {
                         <Cell fill={COLORS.income} />
                         <Cell fill={COLORS.expense} />
                       </Pie>
-                      <Tooltip />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                        formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                      />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
