@@ -34,14 +34,30 @@ export function AIChat() {
   }, []);
 
   const loadConversations = async () => {
-    const stored = localStorage.getItem("ai_conversations");
-    if (stored) {
-      setConversations(JSON.parse(stored));
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("ai_conversations")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setConversations(data.map(conv => ({
+        id: conv.id,
+        title: conv.title,
+        messages: (conv.messages as any) as Message[],
+        created_at: conv.created_at
+      })));
     }
   };
 
-  const saveConversation = () => {
+  const saveConversation = async () => {
     if (currentMessages.length === 0) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
     const conversation: Conversation = {
       id: currentConversationId || crypto.randomUUID(),
@@ -50,11 +66,27 @@ export function AIChat() {
       created_at: new Date().toISOString(),
     };
 
-    const updated = conversations.filter(c => c.id !== conversation.id);
-    updated.unshift(conversation);
-    setConversations(updated);
-    localStorage.setItem("ai_conversations", JSON.stringify(updated));
-    setCurrentConversationId(conversation.id);
+    if (currentConversationId) {
+      // Update existing
+      await supabase
+        .from("ai_conversations")
+        .update({
+          title: conversation.title,
+          messages: conversation.messages as any,
+        })
+        .eq("id", currentConversationId);
+    } else {
+      // Create new
+      await supabase.from("ai_conversations").insert({
+        id: conversation.id,
+        user_id: user.id,
+        title: conversation.title,
+        messages: conversation.messages as any,
+      });
+      setCurrentConversationId(conversation.id);
+    }
+
+    loadConversations();
   };
 
   const loadConversation = (conversation: Conversation) => {
@@ -67,17 +99,19 @@ export function AIChat() {
     setCurrentConversationId(null);
   };
 
-  const deleteConversation = (id: string) => {
-    const updated = conversations.filter(c => c.id !== id);
-    setConversations(updated);
-    localStorage.setItem("ai_conversations", JSON.stringify(updated));
+  const deleteConversation = async (id: string) => {
+    await supabase.from("ai_conversations").delete().eq("id", id);
+    
     if (currentConversationId === id) {
       newConversation();
     }
+    
     toast({
       title: "Conversa excluída",
       description: "O histórico foi removido.",
     });
+    
+    loadConversations();
   };
 
   const sendMessage = async () => {

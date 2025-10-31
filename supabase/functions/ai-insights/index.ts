@@ -1,12 +1,24 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const allowedOrigins = [
+  "https://6b0351b3-5643-4969-a15a-38cd8cd9945c.lovableproject.com",
+  "http://localhost:5173"
+];
+
+const getCorsHeaders = (origin: string | null) => {
+  const corsOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  return {
+    "Access-Control-Allow-Origin": corsOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Credentials": "true",
+  };
 };
 
 serve(async (req) => {
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,6 +42,12 @@ serve(async (req) => {
     }
 
     const { type } = await req.json();
+
+    // Validate input
+    const validTypes = ["weekly", "spending", "goals"];
+    if (!type || !validTypes.includes(type)) {
+      throw new Error("Invalid insight type");
+    }
 
     // Get user data
     const { data: transactions } = await supabaseClient
@@ -92,8 +110,13 @@ serve(async (req) => {
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
-      throw new Error("Failed to get AI insights");
+      console.error("[ai-insights] AI API error:", {
+        status: aiResponse.status,
+        error: errorText,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
+      throw new Error("AI service unavailable");
     }
 
     const aiData = await aiResponse.json();
@@ -104,10 +127,21 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error in ai-insights function:", error);
+    console.error("[ai-insights] Error:", {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    const userMessage = error.message === "Invalid user token" || error.message === "Missing authorization header"
+      ? "Authentication required"
+      : error.message.includes("Invalid")
+      ? error.message
+      : "An error occurred processing your request";
+    
     return new Response(
-      JSON.stringify({ error: error.message || "Unknown error occurred" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: userMessage }),
+      { status: error.message.includes("Authentication") ? 401 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

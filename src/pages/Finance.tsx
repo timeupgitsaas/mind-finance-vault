@@ -10,6 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { z } from "zod";
+
+// Validation schema
+const transactionSchema = z.object({
+  title: z.string().min(1, "Título não pode estar vazio").max(100, "Título muito longo (máx 100 caracteres)").trim(),
+  amount: z.number().positive("Valor deve ser positivo").finite("Valor inválido").max(1000000000, "Valor muito alto"),
+  type: z.enum(["income", "expense"], { errorMap: () => ({ message: "Tipo inválido" }) }),
+  date: z.string().min(1, "Data não pode estar vazia"),
+});
 
 interface Transaction {
   id: string;
@@ -67,29 +76,61 @@ const Finance = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id,
-      title,
-      amount: parseFloat(amount),
-      type,
-      date,
-    });
+    try {
+      const parsedAmount = parseFloat(amount);
+      
+      // Validate input
+      const validated = transactionSchema.parse({
+        title,
+        amount: parsedAmount,
+        type,
+        date,
+      });
 
-    if (error) {
-      toast({
-        title: "Erro ao criar transação",
-        description: error.message,
-        variant: "destructive",
+      const { error } = await supabase.from("transactions").insert({
+        user_id: user.id,
+        title: validated.title,
+        amount: validated.amount,
+        type: validated.type,
+        date: validated.date,
       });
-    } else {
-      toast({
-        title: "Transação criada!",
-        description: "Sua transação foi registrada com sucesso.",
-      });
-      setTitle("");
-      setAmount("");
-      setShowForm(false);
-      fetchTransactions();
+
+      if (error) {
+        toast({
+          title: "Erro ao criar transação",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Transação criada!",
+          description: "Sua transação foi registrada com sucesso.",
+        });
+        setTitle("");
+        setAmount("");
+        setShowForm(false);
+        fetchTransactions();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Erro de validação",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else if (isNaN(parseFloat(amount))) {
+        toast({
+          title: "Erro de validação",
+          description: "Valor inválido",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao criar transação",
+          description: "Ocorreu um erro inesperado",
+          variant: "destructive",
+        });
+      }
     }
   };
 

@@ -17,6 +17,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download, Trash2, Network, BookOpen } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import { useNavigate } from "react-router-dom";
+import { z } from "zod";
+
+// Validation schema
+const noteSchema = z.object({
+  title: z.string().min(1, "Título não pode estar vazio").max(200, "Título muito longo (máx 200 caracteres)").trim(),
+  content: z.string().max(50000, "Conteúdo muito longo (máx 50000 caracteres)"),
+  tags: z.array(z.string().max(50, "Tag muito longa").trim()).max(20, "Máximo de 20 tags"),
+});
 
 interface Note {
   id: string;
@@ -102,68 +110,114 @@ const Notes = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const tagsArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
-    const folderIds = selectedFolderId ? [selectedFolderId] : [];
+    try {
+      const tagsArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
+      const folderIds = selectedFolderId ? [selectedFolderId] : [];
 
-    const { error } = await supabase.from("notes").insert({
-      user_id: user.id,
-      title: title || "Nova Nota",
-      content,
-      tags: tagsArray,
-      folder_ids: folderIds,
-    });
+      // Validate input
+      const validated = noteSchema.parse({
+        title: title || "Nova Nota",
+        content,
+        tags: tagsArray,
+      });
 
-    if (error) {
-      toast({
-        title: "Erro ao criar nota",
-        description: error.message,
-        variant: "destructive",
+      const { error } = await supabase.from("notes").insert({
+        user_id: user.id,
+        title: validated.title,
+        content: validated.content,
+        tags: validated.tags,
+        folder_ids: folderIds,
       });
-    } else {
-      toast({
-        title: "Nota criada!",
-        description: "Sua nota foi salva com sucesso.",
-      });
-      trackActivity({ 
-        charactersWritten: content.length, 
-        wordsWritten: content.split(/\s+/).length, 
-        itemsCreated: 1 
-      });
-      setTitle("");
-      setContent("");
-      setTags("");
-      setIsDialogOpen(false);
-      fetchNotes();
+
+      if (error) {
+        toast({
+          title: "Erro ao criar nota",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Nota criada!",
+          description: "Sua nota foi salva com sucesso.",
+        });
+        trackActivity({ 
+          charactersWritten: content.length, 
+          wordsWritten: content.split(/\s+/).length, 
+          itemsCreated: 1 
+        });
+        setTitle("");
+        setContent("");
+        setTags("");
+        setIsDialogOpen(false);
+        fetchNotes();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Erro de validação",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao criar nota",
+          description: "Ocorreu um erro inesperado",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleUpdateNote = async () => {
     if (!selectedNote) return;
 
-    const tagsArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
+    try {
+      const tagsArray = tags.split(",").map((t) => t.trim()).filter((t) => t);
 
-    const { error } = await supabase
-      .from("notes")
-      .update({
+      // Validate input
+      const validated = noteSchema.parse({
         title,
         content,
         tags: tagsArray,
-      })
-      .eq("id", selectedNote.id);
+      });
 
-    if (error) {
-      toast({
-        title: "Erro ao atualizar nota",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Nota atualizada!",
-        description: "Suas alterações foram salvas.",
-      });
-      setSelectedNote(null);
-      fetchNotes();
+      const { error } = await supabase
+        .from("notes")
+        .update({
+          title: validated.title,
+          content: validated.content,
+          tags: validated.tags,
+        })
+        .eq("id", selectedNote.id);
+
+      if (error) {
+        toast({
+          title: "Erro ao atualizar nota",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Nota atualizada!",
+          description: "Suas alterações foram salvas.",
+        });
+        setSelectedNote(null);
+        fetchNotes();
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Erro de validação",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar nota",
+          description: "Ocorreu um erro inesperado",
+          variant: "destructive",
+        });
+      }
     }
   };
 

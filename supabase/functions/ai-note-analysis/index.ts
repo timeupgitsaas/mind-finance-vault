@@ -52,6 +52,16 @@ serve(async (req) => {
 
     const { noteId, analysisType } = await req.json();
 
+    // Validate input
+    if (!noteId || typeof noteId !== "string" || !noteId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      throw new Error("Invalid note ID format");
+    }
+
+    const validAnalysisTypes = ["similar", "insights"];
+    if (!analysisType || !validAnalysisTypes.includes(analysisType)) {
+      throw new Error("Invalid analysis type");
+    }
+
     // Fetch all user notes
     const { data: notes, error: notesError } = await supabase
       .from("notes")
@@ -133,15 +143,21 @@ Forneça insights sobre:
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
+      console.error("[ai-note-analysis] AI API error:", {
+        status: aiResponse.status,
+        error: errorText,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
       
       if (aiResponse.status === 429) {
-        throw new Error("Limite de requisições atingido. Aguarde um momento e tente novamente.");
-      } else if (aiResponse.status === 402) {
-        throw new Error("Créditos insuficientes. Adicione créditos ao seu workspace.");
+        throw new Error("Rate limit exceeded. Please try again later.");
+      }
+      if (aiResponse.status === 402) {
+        throw new Error("Insufficient AI credits. Please add credits to continue.");
       }
       
-      throw new Error(`Falha ao analisar notas (${aiResponse.status}): ${errorText}`);
+      throw new Error("AI service unavailable");
     }
 
     const aiData = await aiResponse.json();
@@ -152,10 +168,21 @@ Forneça insights sobre:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
-    console.error("Error in ai-note-analysis function:", error);
+    console.error("[ai-note-analysis] Error:", {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    const userMessage = error.message === "Invalid user token" || error.message === "Missing authorization header"
+      ? "Authentication required"
+      : error.message.includes("Invalid") || error.message.includes("Rate limit") || error.message.includes("credits")
+      ? error.message
+      : "An error occurred processing your request";
+    
     return new Response(
-      JSON.stringify({ error: error.message || "Unknown error occurred" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: userMessage }),
+      { status: error.message.includes("Authentication") ? 401 : 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
