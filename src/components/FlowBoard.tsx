@@ -170,8 +170,8 @@ export const FlowBoard = () => {
       id: crypto.randomUUID(),
       title: editTitle,
       content: editContent,
-      x: Math.random() * 400 + 100,
-      y: Math.random() * 300 + 100,
+      x: Math.random() * 600 + 200,
+      y: Math.random() * 500 + 150,
       color: colors[Math.floor(Math.random() * colors.length)],
       connections: [],
     };
@@ -465,7 +465,14 @@ export const FlowBoard = () => {
 
           <div 
             ref={canvasRef}
-            className="flow-canvas relative w-full h-[600px] bg-gradient-to-br from-background to-primary/5 overflow-hidden rounded-lg cursor-grab active:cursor-grabbing"
+            className="flow-canvas relative w-full h-[700px] bg-gradient-to-br from-background via-primary/5 to-secondary/10 overflow-hidden rounded-lg cursor-grab active:cursor-grabbing"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, hsl(var(--border) / 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, hsl(var(--border) / 0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px',
+            }}
             onWheel={handleWheel}
             onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleCanvasMouseMove}
@@ -474,43 +481,93 @@ export const FlowBoard = () => {
           >
             {/* Render connections */}
             <svg 
-              className="absolute inset-0 w-full h-full pointer-events-none"
+              className="absolute inset-0 pointer-events-none"
               style={{
+                width: '200%',
+                height: '200%',
+                left: '-50%',
+                top: '-50%',
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                transformOrigin: '0 0'
+                transformOrigin: '50% 50%',
+                zIndex: 1
               }}
             >
+              <defs>
+                {colors.map(color => (
+                  <marker
+                    key={`arrow-${color}`}
+                    id={`arrowhead-${color.replace('#', '')}`}
+                    markerWidth="12"
+                    markerHeight="12"
+                    refX="11"
+                    refY="6"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path
+                      d="M 0 0 L 12 6 L 0 12 L 3 6 Z"
+                      fill={color}
+                      opacity="0.8"
+                    />
+                  </marker>
+                ))}
+                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
               {blocks.map(block => 
                 block.connections.map(targetId => {
                   const target = blocks.find(b => b.id === targetId);
                   if (!target) return null;
+                  
+                  const startX = block.x + 80;
+                  const startY = block.y + 40;
+                  const endX = target.x + 80;
+                  const endY = target.y + 40;
+                  
+                  // Calculate control points for smooth bezier curve
+                  const dx = endX - startX;
+                  const dy = endY - startY;
+                  const distance = Math.sqrt(dx * dx + dy * dy);
+                  const controlOffset = Math.min(distance * 0.5, 100);
+                  
+                  const controlX1 = startX + controlOffset;
+                  const controlY1 = startY;
+                  const controlX2 = endX - controlOffset;
+                  const controlY2 = endY;
+                  
+                  const path = `M ${startX} ${startY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${endX} ${endY}`;
+                  
                   return (
-                    <line
-                      key={`${block.id}-${targetId}`}
-                      x1={block.x + 80}
-                      y1={block.y + 40}
-                      x2={target.x + 80}
-                      y2={target.y + 40}
-                      stroke={block.color}
-                      strokeWidth="2"
-                      markerEnd="url(#arrowhead)"
-                      opacity="0.6"
-                    />
+                    <g key={`${block.id}-${targetId}`}>
+                      {/* Background glow */}
+                      <path
+                        d={path}
+                        stroke={block.color}
+                        strokeWidth="8"
+                        fill="none"
+                        opacity="0.1"
+                        filter="url(#glow)"
+                      />
+                      {/* Main line */}
+                      <path
+                        d={path}
+                        stroke={block.color}
+                        strokeWidth="3"
+                        fill="none"
+                        opacity="0.7"
+                        markerEnd={`url(#arrowhead-${block.color.replace('#', '')})`}
+                        strokeLinecap="round"
+                        className="transition-all hover:opacity-100"
+                      />
+                    </g>
                   );
                 })
               )}
-              <defs>
-                <marker
-                  id="arrowhead"
-                  markerWidth="10"
-                  markerHeight="10"
-                  refX="9"
-                  refY="3"
-                  orient="auto"
-                >
-                  <polygon points="0 0, 10 3, 0 6" fill="currentColor" />
-                </marker>
-              </defs>
             </svg>
 
             {/* Render blocks */}
@@ -518,8 +575,12 @@ export const FlowBoard = () => {
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                 transformOrigin: '0 0',
-                width: '100%',
-                height: '100%'
+                width: '200%',
+                height: '200%',
+                position: 'absolute',
+                left: '-50%',
+                top: '-50%',
+                zIndex: 2
               }}
             >
               {blocks.map(block => (
@@ -533,8 +594,11 @@ export const FlowBoard = () => {
                   }}
                 >
                 <Card
-                  className="shadow-lg hover:shadow-xl transition-all border-2"
-                  style={{ borderColor: block.color }}
+                  className="shadow-lg hover:shadow-2xl transition-all duration-300 border-2 hover:scale-105 backdrop-blur-sm bg-card/95"
+                  style={{ 
+                    borderColor: block.color,
+                    boxShadow: `0 4px 20px ${block.color}30, 0 0 0 1px ${block.color}20`
+                  }}
                   onClick={() => {
                     if (connectingFrom) {
                       handleConnect(block.id);
