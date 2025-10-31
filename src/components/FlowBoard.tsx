@@ -278,14 +278,18 @@ export const FlowBoard = () => {
   };
 
   const startDragging = (e: React.MouseEvent, blockId: string) => {
+    e.stopPropagation();
     const block = blocks.find(b => b.id === blockId);
     if (!block) return;
 
-    const startX = e.clientX / zoom - block.x;
-    const startY = e.clientY / zoom - block.y;
+    // Calculate offset considering zoom and pan
+    const startX = (e.clientX - pan.x) / zoom - block.x;
+    const startY = (e.clientY - pan.y) / zoom - block.y;
 
     const handleMouseMove = (e: MouseEvent) => {
-      updateBlockPosition(blockId, e.clientX / zoom - startX, e.clientY / zoom - startY);
+      const newX = (e.clientX - pan.x) / zoom - startX;
+      const newY = (e.clientY - pan.y) / zoom - startY;
+      updateBlockPosition(blockId, newX, newY);
     };
 
     const handleMouseUp = () => {
@@ -298,16 +302,37 @@ export const FlowBoard = () => {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const delta = e.deltaY * -0.001;
-      const newZoom = Math.min(Math.max(0.3, zoom + delta), 3);
-      setZoom(newZoom);
-    }
+    e.preventDefault();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Get mouse position relative to canvas
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Calculate zoom
+    const delta = e.deltaY * -0.001;
+    const newZoom = Math.min(Math.max(0.3, zoom + delta), 3);
+    
+    // Adjust pan to zoom towards mouse position
+    const zoomRatio = newZoom / zoom;
+    const newPanX = mouseX - (mouseX - pan.x) * zoomRatio;
+    const newPanY = mouseY - (mouseY - pan.y) * zoomRatio;
+
+    setZoom(newZoom);
+    setPan({ x: newPanX, y: newPanY });
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 0 && (e.target as HTMLElement).classList.contains('flow-canvas')) {
+    const target = e.target as HTMLElement;
+    // Only pan if clicking directly on canvas or SVG, not on blocks
+    if (e.button === 0 && (
+      target.classList.contains('flow-canvas') || 
+      target.tagName === 'svg' || 
+      target.tagName === 'path' ||
+      target.classList.contains('canvas-container')
+    )) {
+      e.preventDefault();
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
@@ -315,6 +340,7 @@ export const FlowBoard = () => {
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
     if (isPanning) {
+      e.preventDefault();
       setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
     }
   };
@@ -465,13 +491,15 @@ export const FlowBoard = () => {
 
           <div 
             ref={canvasRef}
-            className="flow-canvas relative w-full h-[700px] bg-gradient-to-br from-background via-primary/5 to-secondary/10 overflow-hidden rounded-lg cursor-grab active:cursor-grabbing"
+            className="flow-canvas relative w-full h-[700px] bg-gradient-to-br from-background via-primary/5 to-secondary/10 overflow-hidden rounded-lg select-none"
             style={{
               backgroundImage: `
                 linear-gradient(to right, hsl(var(--border) / 0.1) 1px, transparent 1px),
                 linear-gradient(to bottom, hsl(var(--border) / 0.1) 1px, transparent 1px)
               `,
-              backgroundSize: '40px 40px',
+              backgroundSize: `${40 * zoom}px ${40 * zoom}px`,
+              backgroundPosition: `${pan.x}px ${pan.y}px`,
+              cursor: isPanning ? 'grabbing' : 'grab'
             }}
             onWheel={handleWheel}
             onMouseDown={handleCanvasMouseDown}
@@ -481,14 +509,11 @@ export const FlowBoard = () => {
           >
             {/* Render connections */}
             <svg 
-              className="absolute inset-0 pointer-events-none"
+              className="absolute inset-0 pointer-events-none canvas-container"
               style={{
-                width: '200%',
-                height: '200%',
-                left: '-50%',
-                top: '-50%',
-                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                transformOrigin: '50% 50%',
+                width: '100%',
+                height: '100%',
+                overflow: 'visible',
                 zIndex: 1
               }}
             >
@@ -519,68 +544,70 @@ export const FlowBoard = () => {
                   </feMerge>
                 </filter>
               </defs>
-              {blocks.map(block => 
-                block.connections.map(targetId => {
-                  const target = blocks.find(b => b.id === targetId);
-                  if (!target) return null;
-                  
-                  const startX = block.x + 80;
-                  const startY = block.y + 40;
-                  const endX = target.x + 80;
-                  const endY = target.y + 40;
-                  
-                  // Calculate control points for smooth bezier curve
-                  const dx = endX - startX;
-                  const dy = endY - startY;
-                  const distance = Math.sqrt(dx * dx + dy * dy);
-                  const controlOffset = Math.min(distance * 0.5, 100);
-                  
-                  const controlX1 = startX + controlOffset;
-                  const controlY1 = startY;
-                  const controlX2 = endX - controlOffset;
-                  const controlY2 = endY;
-                  
-                  const path = `M ${startX} ${startY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${endX} ${endY}`;
-                  
-                  return (
-                    <g key={`${block.id}-${targetId}`}>
-                      {/* Background glow */}
-                      <path
-                        d={path}
-                        stroke={block.color}
-                        strokeWidth="8"
-                        fill="none"
-                        opacity="0.1"
-                        filter="url(#glow)"
-                      />
-                      {/* Main line */}
-                      <path
-                        d={path}
-                        stroke={block.color}
-                        strokeWidth="3"
-                        fill="none"
-                        opacity="0.7"
-                        markerEnd={`url(#arrowhead-${block.color.replace('#', '')})`}
-                        strokeLinecap="round"
-                        className="transition-all hover:opacity-100"
-                      />
-                    </g>
-                  );
-                })
-              )}
+              <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+                {blocks.map(block => 
+                  block.connections.map(targetId => {
+                    const target = blocks.find(b => b.id === targetId);
+                    if (!target) return null;
+                    
+                    const startX = block.x + 80;
+                    const startY = block.y + 40;
+                    const endX = target.x + 80;
+                    const endY = target.y + 40;
+                    
+                    // Calculate control points for smooth bezier curve
+                    const dx = endX - startX;
+                    const dy = endY - startY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const controlOffset = Math.min(distance * 0.5, 100);
+                    
+                    const controlX1 = startX + controlOffset;
+                    const controlY1 = startY;
+                    const controlX2 = endX - controlOffset;
+                    const controlY2 = endY;
+                    
+                    const path = `M ${startX} ${startY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${endX} ${endY}`;
+                    
+                    return (
+                      <g key={`${block.id}-${targetId}`}>
+                        {/* Background glow */}
+                        <path
+                          d={path}
+                          stroke={block.color}
+                          strokeWidth={8 / zoom}
+                          fill="none"
+                          opacity="0.1"
+                          filter="url(#glow)"
+                        />
+                        {/* Main line */}
+                        <path
+                          d={path}
+                          stroke={block.color}
+                          strokeWidth={3 / zoom}
+                          fill="none"
+                          opacity="0.7"
+                          markerEnd={`url(#arrowhead-${block.color.replace('#', '')})`}
+                          strokeLinecap="round"
+                          className="transition-all hover:opacity-100"
+                        />
+                      </g>
+                    );
+                  })
+                )}
+              </g>
             </svg>
 
             {/* Render blocks */}
             <div 
+              className="canvas-container"
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                 transformOrigin: '0 0',
-                width: '200%',
-                height: '200%',
                 position: 'absolute',
-                left: '-50%',
-                top: '-50%',
-                zIndex: 2
+                width: '100%',
+                height: '100%',
+                zIndex: 2,
+                pointerEvents: 'none'
               }}
             >
               {blocks.map(block => (
@@ -591,6 +618,7 @@ export const FlowBoard = () => {
                     left: `${block.x}px`,
                     top: `${block.y}px`,
                     width: "160px",
+                    pointerEvents: 'auto'
                   }}
                 >
                 <Card
