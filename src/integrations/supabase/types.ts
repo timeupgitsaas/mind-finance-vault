@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          target_user_id: string | null
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_user_id?: string | null
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          target_user_id?: string | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
       ai_conversations: {
         Row: {
           created_at: string
@@ -316,6 +346,81 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_method: string | null
+          plan_type: string | null
+          status: string
+          stripe_payment_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          plan_type?: string | null
+          status: string
+          stripe_payment_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          plan_type?: string | null
+          status?: string
+          stripe_payment_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plan_limits: {
+        Row: {
+          created_at: string
+          id: string
+          max_ai_messages: number | null
+          max_folders: number | null
+          max_notes: number | null
+          max_transactions: number | null
+          plan_type: string
+          price_monthly: number | null
+          price_yearly: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_ai_messages?: number | null
+          max_folders?: number | null
+          max_notes?: number | null
+          max_transactions?: number | null
+          plan_type: string
+          price_monthly?: number | null
+          price_yearly?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_ai_messages?: number | null
+          max_folders?: number | null
+          max_notes?: number | null
+          max_transactions?: number | null
+          plan_type?: string
+          price_monthly?: number | null
+          price_yearly?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       recurring_transactions: {
         Row: {
           amount: number
@@ -371,6 +476,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          next_billing_date: string | null
+          payment_method: string | null
+          plan_type: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          next_billing_date?: string | null
+          payment_method?: string | null
+          plan_type?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          next_billing_date?: string | null
+          payment_method?: string | null
+          plan_type?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -443,6 +584,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sensitive_data: {
+        Row: {
+          address_encrypted: string | null
+          birth_date_encrypted: string | null
+          cpf_cnpj_encrypted: string | null
+          created_at: string
+          id: string
+          phone_number_encrypted: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address_encrypted?: string | null
+          birth_date_encrypted?: string | null
+          cpf_cnpj_encrypted?: string | null
+          created_at?: string
+          id?: string
+          phone_number_encrypted?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address_encrypted?: string | null
+          birth_date_encrypted?: string | null
+          cpf_cnpj_encrypted?: string | null
+          created_at?: string
+          id?: string
+          phone_number_encrypted?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_statistics: {
         Row: {
           characters_written: number | null
@@ -493,10 +694,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrypt_text: {
+        Args: { data: string; encryption_key: string }
+        Returns: string
+      }
+      encrypt_text: {
+        Args: { data: string; encryption_key: string }
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin" | "superadmin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -623,6 +839,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin", "superadmin"],
+    },
   },
 } as const

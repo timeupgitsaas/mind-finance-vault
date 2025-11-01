@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +7,7 @@ import { HelpDialog } from "./HelpDialog";
 import { LanguageSelector } from "./LanguageSelector";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
+import { AdminGuard } from "./AdminGuard";
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -17,11 +18,13 @@ import {
   BookOpen,
   BarChart3,
   Menu,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Shield
 } from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -84,6 +87,18 @@ const Navbar = () => {
             <HelpDialog />
             <LanguageSelector />
             <ThemeToggle />
+            
+            <AdminGuard>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/admin")}
+                className="gap-2"
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+              </Button>
+            </AdminGuard>
 
             <Button
               variant="ghost"
