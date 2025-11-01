@@ -639,69 +639,71 @@ export const FlowBoard = () => {
                     onMouseDown={(e) => startDragging(e, block.id)}
                     title={block.title}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-sm font-semibold line-clamp-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-sm font-semibold line-clamp-2 flex-1">
                         {truncateText(block.title, 40)}
                       </CardTitle>
-                      <Grip className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <Grip className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                     </div>
                   </CardHeader>
-                  <CardContent className="p-3 space-y-2">
+                  <CardContent className="p-3 space-y-3">
                     {block.content && (
                       <p 
-                        className="text-xs text-muted-foreground line-clamp-3" 
+                        className="text-xs text-muted-foreground line-clamp-3 min-h-[2.5rem]" 
                         title={block.content}
                       >
                         {truncateText(block.content, 150)}
                       </p>
                     )}
-                    <div className="flex gap-1">
+                    <div className="flex items-center justify-start gap-1 pt-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs"
+                        className="h-8 px-2 flex items-center justify-center"
                         onClick={(e) => {
                           e.stopPropagation();
                           openEditDialog(block);
                         }}
+                        title="Editar bloco"
                       >
-                        <Edit2 className="w-3 h-3 mr-1" />
-                        Editar
+                        <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs"
+                        className="h-8 px-2 flex items-center justify-center"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedBlock(block);
                           setIsBlockDetailOpen(true);
                         }}
+                        title="Ver detalhes"
                       >
-                        <Eye className="w-3 h-3 mr-1" />
-                        Ver
+                        <Eye className="w-4 h-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-xs"
+                        className="h-8 px-2 flex items-center justify-center"
                         onClick={(e) => {
                           e.stopPropagation();
                           setConnectingFrom(connectingFrom === block.id ? null : block.id);
                         }}
+                        title={connectingFrom === block.id ? "Cancelar conexão" : "Conectar bloco"}
                       >
                         {connectingFrom === block.id ? "❌" : "🔗"}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6"
+                        className="h-8 px-2 flex items-center justify-center"
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteBlock(block.id);
                         }}
+                        title="Excluir bloco"
                       >
-                        <Trash2 className="w-3 h-3 text-destructive" />
+                        <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     </div>
                   </CardContent>
