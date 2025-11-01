@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight, Calendar, Trash2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { z } from "zod";
+import { CategoryManager } from "@/components/CategoryManager";
+import { RecurringTransactions } from "@/components/RecurringTransactions";
 
 // Validation schema
 const transactionSchema = z.object({
@@ -30,25 +32,56 @@ interface Transaction {
   categories?: { name: string; color: string };
 }
 
+interface Category {
+  id: string;
+  name: string;
+  type: "income" | "expense";
+  color: string;
+}
+
 const Finance = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+
+  // Date filter state
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
   // Form state
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [categoryId, setCategoryId] = useState<string>("");
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+    fetchCategories();
+  }, [currentMonth, currentYear]);
+
+  const fetchCategories = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("name");
+
+    if (data) setCategories(data as Category[]);
+  };
 
   const fetchTransactions = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
+
+    // Filter by selected month and year
+    const startDate = new Date(currentYear, currentMonth, 1).toISOString().split("T")[0];
+    const endDate = new Date(currentYear, currentMonth + 1, 0).toISOString().split("T")[0];
 
     const { data, error } = await supabase
       .from("transactions")
@@ -57,6 +90,8 @@ const Finance = () => {
         categories(name, color)
       `)
       .eq("user_id", user.id)
+      .gte("date", startDate)
+      .lte("date", endDate)
       .order("date", { ascending: false });
 
     if (error) {
@@ -93,6 +128,7 @@ const Finance = () => {
         amount: validated.amount,
         type: validated.type,
         date: validated.date,
+        category_id: categoryId || null,
       });
 
       if (error) {
@@ -108,8 +144,10 @@ const Finance = () => {
         });
         setTitle("");
         setAmount("");
+        setCategoryId("");
         setShowForm(false);
         fetchTransactions();
+        fetchCategories();
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -159,6 +197,25 @@ const Finance = () => {
     }));
   }, [transactions]);
 
+  const categoryByExpense = useMemo(() => {
+    const expenseTransactions = transactions.filter(t => t.type === "expense" && t.categories);
+    const grouped = expenseTransactions.reduce((acc, t) => {
+      const catName = t.categories?.name || "Sem categoria";
+      const catColor = t.categories?.color || "#8B5CF6";
+      if (!acc[catName]) {
+        acc[catName] = { value: 0, color: catColor };
+      }
+      acc[catName].value += Number(t.amount);
+      return acc;
+    }, {} as Record<string, { value: number; color: string }>);
+
+    return Object.entries(grouped).map(([name, data]) => ({
+      name,
+      value: Math.round(data.value * 100) / 100,
+      color: data.color,
+    }));
+  }, [transactions]);
+
   const pieData = useMemo(() => [
     { name: "Receitas", value: totals.income },
     { name: "Despesas", value: totals.expense },
@@ -169,37 +226,96 @@ const Finance = () => {
     expense: "hsl(var(--destructive))",
   };
 
+  const deleteTransaction = async (id: string) => {
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Transação excluída",
+      });
+      fetchTransactions();
+    }
+  };
+
+  const goToPreviousMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const monthNames = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+
+  const availableCategories = categories.filter(c => c.type === type);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Navbar />
       
       <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold">Finanças</h1>
             <p className="text-muted-foreground">Gerencie suas receitas e despesas</p>
           </div>
-          <Button onClick={() => setShowForm(!showForm)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Nova Transação
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card min-w-[200px] justify-center">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="font-semibold">
+                {monthNames[currentMonth]} {currentYear}
+              </span>
+            </div>
+            <Button variant="outline" size="icon" onClick={goToNextMonth}>
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nova Transação
+            </Button>
+          </div>
         </div>
 
-        {showForm && (
-          <Card className="shadow-md">
+          <Card className="shadow-lg border-primary/10 bg-gradient-card">
             <CardHeader>
               <CardTitle>Nova Transação</CardTitle>
               <CardDescription>Adicione uma nova receita ou despesa</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Título</Label>
                     <Input
                       id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Ex: Compras do mês"
                       required
                     />
                   </div>
@@ -211,12 +327,13 @@ const Finance = () => {
                       step="0.01"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0.00"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="type">Tipo</Label>
                     <Select value={type} onValueChange={(value: "income" | "expense") => setType(value)}>
@@ -226,6 +343,22 @@ const Finance = () => {
                       <SelectContent>
                         <SelectItem value="income">Receita</SelectItem>
                         <SelectItem value="expense">Despesa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Categoria (opcional)</Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Sem categoria</SelectItem>
+                        {availableCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -242,7 +375,7 @@ const Finance = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button type="submit">Salvar</Button>
+                  <Button type="submit" className="flex-1">Salvar</Button>
                   <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
                     Cancelar
                   </Button>
@@ -250,152 +383,198 @@ const Finance = () => {
               </form>
             </CardContent>
           </Card>
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="shadow-md">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-success/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-              <TrendingUp className="w-4 h-4 text-success" />
+              <CardTitle className="text-sm font-medium">Receitas do Mês</CardTitle>
+              <div className="p-2 rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
+                <TrendingUp className="w-4 h-4 text-success" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">
+              <div className="text-3xl font-bold text-success">
                 R$ {totals.income.toFixed(2)}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-md">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-destructive/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-              <TrendingDown className="w-4 h-4 text-destructive" />
+              <CardTitle className="text-sm font-medium">Despesas do Mês</CardTitle>
+              <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
+                <TrendingDown className="w-4 h-4 text-destructive" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">
+              <div className="text-3xl font-bold text-destructive">
                 R$ {totals.expense.toFixed(2)}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-md">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-primary/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-              <DollarSign className="w-4 h-4 text-primary" />
+              <CardTitle className="text-sm font-medium">Saldo do Mês</CardTitle>
+              <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <DollarSign className="w-4 h-4 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className={`text-3xl font-bold ${totals.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
                 R$ {totals.balance.toFixed(2)}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="transactions">Transações</TabsTrigger>
-            <TabsTrigger value="charts">Gráficos</TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Tabs defaultValue="transactions" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="transactions">Transações</TabsTrigger>
+                <TabsTrigger value="charts">Gráficos</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="transactions" className="space-y-4">
-            {loading ? (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  Carregando...
-                </CardContent>
-              </Card>
-            ) : transactions.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  Nenhuma transação encontrada. Crie sua primeira transação!
-                </CardContent>
-              </Card>
-            ) : (
-              transactions.map((transaction) => (
-                <Card key={transaction.id} className="shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{transaction.title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                    <div className={`text-lg font-bold ${
-                      transaction.type === "income" ? "text-success" : "text-destructive"
-                    }`}>
-                      {transaction.type === "income" ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+              <TabsContent value="transactions" className="space-y-4">
+                {loading ? (
+                  <Card className="shadow-lg">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      Carregando...
+                    </CardContent>
+                  </Card>
+                ) : transactions.length === 0 ? (
+                  <Card className="shadow-lg">
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      Nenhuma transação neste mês. Crie sua primeira transação!
+                    </CardContent>
+                  </Card>
+                ) : (
+                  transactions.map((transaction) => (
+                    <Card key={transaction.id} className="shadow-md hover:shadow-lg transition-all border-l-4" style={{ borderLeftColor: transaction.categories?.color || "hsl(var(--border))" }}>
+                      <CardContent className="flex items-center justify-between p-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold">{transaction.title}</h3>
+                            {transaction.categories && (
+                              <span className="text-xs px-2 py-1 rounded-full" style={{ 
+                                backgroundColor: `${transaction.categories.color}20`,
+                                color: transaction.categories.color 
+                              }}>
+                                {transaction.categories.name}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(transaction.date).toLocaleDateString("pt-BR", { 
+                              day: '2-digit', 
+                              month: 'long' 
+                            })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className={`text-lg font-bold ${
+                            transaction.type === "income" ? "text-success" : "text-destructive"
+                          }`}>
+                            {transaction.type === "income" ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => deleteTransaction(transaction.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </TabsContent>
 
-          <TabsContent value="charts">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-md">
-                <CardHeader>
-                  <CardTitle>Últimas Transações</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis 
-                        dataKey="name" 
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                      />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        formatter={(value: number) => `R$ ${value.toFixed(2)}`}
-                      />
-                      <Bar dataKey="Valor" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              <TabsContent value="charts">
+                <div className="grid grid-cols-1 gap-6">
+                  <Card className="shadow-lg border-primary/10 bg-gradient-card">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        Últimas Transações
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                          <XAxis 
+                            dataKey="name" 
+                            stroke="hsl(var(--muted-foreground))"
+                            fontSize={12}
+                          />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                            }}
+                            formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                          />
+                          <Bar dataKey="Valor" radius={[8, 8, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
 
-              <Card className="shadow-md">
-                <CardHeader>
-                  <CardTitle>Receitas vs Despesas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value }) => `${name}: R$ ${value.toFixed(2)}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        <Cell fill={COLORS.income} />
-                        <Cell fill={COLORS.expense} />
-                      </Pie>
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        formatter={(value: number) => `R$ ${value.toFixed(2)}`}
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+                  {categoryByExpense.length > 0 && (
+                    <Card className="shadow-lg border-accent/10 bg-gradient-card">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingDown className="w-5 h-5 text-accent" />
+                          Despesas por Categoria
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={categoryByExpense}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, value }) => `${name}: R$ ${value.toFixed(2)}`}
+                              outerRadius={100}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {categoryByExpense.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              contentStyle={{
+                                backgroundColor: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px",
+                              }}
+                              formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                            />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          <div className="space-y-6">
+            <CategoryManager />
+            <RecurringTransactions />
+          </div>
+        </div>
       </div>
     </div>
   );
