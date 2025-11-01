@@ -434,9 +434,15 @@ const Finance = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <Tabs defaultValue="transactions" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="transactions">Transações</TabsTrigger>
-                <TabsTrigger value="charts">Gráficos</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 h-auto">
+                <TabsTrigger value="transactions" className="text-xs sm:text-sm py-2.5">
+                  <span className="hidden xs:inline">Transações</span>
+                  <span className="xs:hidden">💳 Lista</span>
+                </TabsTrigger>
+                <TabsTrigger value="charts" className="text-xs sm:text-sm py-2.5">
+                  <span className="hidden xs:inline">Gráficos</span>
+                  <span className="xs:hidden">📊 Charts</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="transactions" className="space-y-4">

@@ -396,7 +396,7 @@ const Notes = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
         
-        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+        <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -406,18 +406,21 @@ const Notes = () => {
               <p className="text-sm sm:text-base text-muted-foreground">Organize suas ideias e pensamentos</p>
             </div>
             
-            <TabsList className="grid w-[400px] grid-cols-3">
-              <TabsTrigger value="notes" className="gap-2">
-                <FileText className="w-4 h-4" />
-                Notas
+            <TabsList className="grid w-full sm:w-[400px] grid-cols-3 h-auto">
+              <TabsTrigger value="notes" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Notas</span>
+                <span className="xs:hidden">📝</span>
               </TabsTrigger>
-              <TabsTrigger value="flow" className="gap-2">
-                <BookOpen className="w-4 h-4" />
-                Fluxos Visuais
+              <TabsTrigger value="flow" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Fluxos</span>
+                <span className="xs:hidden">📖</span>
               </TabsTrigger>
-              <TabsTrigger value="map" className="gap-2">
-                <Network className="w-4 h-4" />
-                Mapa de Ideias
+              <TabsTrigger value="map" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
+                <Network className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">Mapas</span>
+                <span className="xs:hidden">🗺️</span>
               </TabsTrigger>
             </TabsList>
           </div>

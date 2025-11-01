@@ -103,9 +103,9 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin" className="text-sm">Entrar</TabsTrigger>
-                <TabsTrigger value="signup" className="text-sm">Criar conta</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 h-auto">
+                <TabsTrigger value="signin" className="text-sm py-2.5">Entrar</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm py-2.5">Criar conta</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">

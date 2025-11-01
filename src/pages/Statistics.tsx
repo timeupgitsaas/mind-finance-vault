@@ -184,7 +184,7 @@ export default function Statistics() {
         <Navbar />
         
         <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             📊 Minha Jornada
@@ -192,11 +192,20 @@ export default function Statistics() {
           <p className="text-sm sm:text-base text-muted-foreground">Acompanhe seu progresso e evolução pessoal</p>
         </div>
 
-        <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
-          <TabsList>
-            <TabsTrigger value="month">Este Mês</TabsTrigger>
-            <TabsTrigger value="year">Este Ano</TabsTrigger>
-            <TabsTrigger value="all">Todo Tempo</TabsTrigger>
+        <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)} className="w-full">
+          <TabsList className="grid grid-cols-3 w-full sm:w-auto h-auto">
+            <TabsTrigger value="month" className="text-xs sm:text-sm px-2 sm:px-3 py-2">
+              <span className="hidden xs:inline">Este Mês</span>
+              <span className="xs:hidden">📅 Mês</span>
+            </TabsTrigger>
+            <TabsTrigger value="year" className="text-xs sm:text-sm px-2 sm:px-3 py-2">
+              <span className="hidden xs:inline">Este Ano</span>
+              <span className="xs:hidden">📆 Ano</span>
+            </TabsTrigger>
+            <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3 py-2">
+              <span className="hidden xs:inline">Todo Tempo</span>
+              <span className="xs:hidden">⏳ Tudo</span>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
