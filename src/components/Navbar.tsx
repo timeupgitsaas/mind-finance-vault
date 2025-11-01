@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "./ThemeToggle";
 import { HelpDialog } from "./HelpDialog";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -12,12 +14,14 @@ import {
   LogOut,
   Sparkles,
   BookOpen,
-  BarChart3
+  BarChart3,
+  Menu
 } from "lucide-react";
 
 const Navbar = () => {
   const location = useLocation();
   const { toast } = useToast();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -44,7 +48,7 @@ const Navbar = () => {
             <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary group-hover:shadow-lg transition-all">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div className="flex flex-col">
+            <div className="hidden sm:flex flex-col">
               <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
                 Time Up Flow
               </span>
@@ -54,6 +58,7 @@ const Navbar = () => {
             </div>
           </Link>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -85,6 +90,68 @@ const Navbar = () => {
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="flex md:hidden items-center gap-2">
+            <ThemeToggle />
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-11 w-11">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] sm:w-[350px]">
+                <div className="flex flex-col gap-4 mt-8">
+                  <div className="flex items-center gap-2 mb-4 pb-4 border-b">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary">
+                      <Sparkles className="w-6 h-6 text-primary-foreground" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">
+                        Time Up Flow
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        Menu
+                      </span>
+                    </div>
+                  </div>
+
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    
+                    return (
+                      <Link 
+                        key={item.path} 
+                        to={item.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Button
+                          variant={isActive ? "default" : "ghost"}
+                          className={`w-full justify-start gap-3 h-12 text-base ${isActive ? 'shadow-primary' : ''}`}
+                        >
+                          <Icon className="w-5 h-5" />
+                          <span>{item.label}</span>
+                        </Button>
+                      </Link>
+                    );
+                  })}
+
+                  <div className="mt-4 pt-4 border-t space-y-2">
+                    <HelpDialog />
+                    <Button
+                      variant="ghost"
+                      onClick={handleSignOut}
+                      className="w-full justify-start gap-3 h-12 text-base text-destructive hover:text-destructive"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      <span>Sair</span>
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

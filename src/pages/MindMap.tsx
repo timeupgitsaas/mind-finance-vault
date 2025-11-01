@@ -286,7 +286,7 @@ const MindMap = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex flex-col lg:flex-row">
       <FolderSidebar 
         selectedFolderId={selectedFolderId}
         onFolderSelect={setSelectedFolderId}
@@ -296,25 +296,25 @@ const MindMap = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
         
-        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Mapa Mental
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Visualize as conexões entre suas notas
               </p>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button 
                 onClick={() => setGroupByFolder(!groupByFolder)}
                 variant={groupByFolder ? "default" : "outline"} 
-                className="gap-2"
+                className="gap-2 flex-1 sm:flex-none h-11"
               >
                 {groupByFolder ? <FolderOpen className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                {groupByFolder ? "Ver por Pasta" : "Ver Tudo"}
+                <span className="hidden xs:inline">{groupByFolder ? "Ver por Pasta" : "Ver Tudo"}</span>
               </Button>
               <Button 
                 onClick={() => {
@@ -322,33 +322,37 @@ const MindMap = () => {
                   setSelectedNodeForConnection(null);
                 }} 
                 variant={connectMode ? "default" : "outline"} 
-                className="gap-2"
+                className="gap-2 flex-1 sm:flex-none h-11"
               >
                 <Link2 className="h-4 w-4" />
-                {connectMode ? "Cancelar" : "Conectar"}
+                <span className="hidden xs:inline">{connectMode ? "Cancelar" : "Conectar"}</span>
               </Button>
               <ImportExportButtons module="notes" />
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 items-center">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Filtrar por tag..."
-              value={filterTag}
-              onChange={(e) => setFilterTag(e.target.value)}
-              className="max-w-xs"
-            />
-            {allTags.slice(0, 5).map((tag) => (
-              <Badge
-                key={tag}
-                variant={filterTag === tag ? "default" : "outline"}
-                className="cursor-pointer hover:bg-primary/20 transition-colors"
-                onClick={() => setFilterTag(filterTag === tag ? "" : tag)}
-              >
-                {tag}
-              </Badge>
-            ))}
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 items-start sm:items-center">
+            <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
+              <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Input
+                placeholder="Filtrar por tag..."
+                value={filterTag}
+                onChange={(e) => setFilterTag(e.target.value)}
+                className="flex-1 sm:max-w-xs h-11"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allTags.slice(0, 5).map((tag) => (
+                <Badge
+                  key={tag}
+                  variant={filterTag === tag ? "default" : "outline"}
+                  className="cursor-pointer hover:bg-primary/20 transition-colors h-9 px-3"
+                  onClick={() => setFilterTag(filterTag === tag ? "" : tag)}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
 
           {loading ? (
@@ -369,17 +373,18 @@ const MindMap = () => {
           ) : (
             <Card className="shadow-xl border-primary/20 relative overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Network className="h-5 w-5" />
                   Visualização de Conexões
                 </CardTitle>
-                <CardDescription>
-                  Use [[título da nota]] para criar links. Ctrl + Scroll para zoom. Space + Drag para mover.
-                  {connectMode && <span className="block mt-2 text-primary font-medium">🔗 Clique em duas notas para conectá-las</span>}
+                <CardDescription className="text-xs sm:text-sm">
+                  <span className="hidden sm:inline">Use [[título da nota]] para criar links. Ctrl + Scroll para zoom. Space + Drag para mover.</span>
+                  <span className="sm:hidden">Toque e arraste para navegar. Pinça para zoom.</span>
+                  {connectMode && <span className="block mt-2 text-primary font-medium text-xs sm:text-sm">🔗 Clique em duas notas para conectá-las</span>}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="relative">
-                 <div className="w-full h-[calc(100vh-400px)] min-h-[500px] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-none">
+              <CardContent className="relative p-2 sm:p-6">
+                 <div className="w-full h-[400px] sm:h-[500px] lg:h-[calc(100vh-400px)] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-auto">
                   <MindMapControls
                     zoom={zoom}
                     onZoomIn={handleZoomIn}

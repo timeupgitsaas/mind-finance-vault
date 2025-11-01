@@ -275,28 +275,30 @@ const Finance = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <Navbar />
       
-      <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Finanças</h1>
-            <p className="text-muted-foreground">Gerencie suas receitas e despesas</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">Finanças</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Gerencie suas receitas e despesas</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-card min-w-[200px] justify-center">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span className="font-semibold">
-                {monthNames[currentMonth]} {currentYear}
-              </span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={goToPreviousMonth} className="h-11 w-11">
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2 border rounded-lg bg-card flex-1 sm:min-w-[200px] justify-center">
+                <Calendar className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm sm:text-base">
+                  {monthNames[currentMonth]} {currentYear}
+                </span>
+              </div>
+              <Button variant="outline" size="icon" onClick={goToNextMonth} className="h-11 w-11">
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-            <Button variant="outline" size="icon" onClick={goToNextMonth}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+            <Button onClick={() => setShowForm(!showForm)} className="gap-2 h-11 w-full sm:w-auto">
               <Plus className="w-4 h-4" />
-              Nova Transação
+              <span className="sm:inline">Nova Transação</span>
             </Button>
           </div>
         </div>
@@ -383,16 +385,16 @@ const Finance = () => {
             </CardContent>
           </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Card className="shadow-lg hover:shadow-xl transition-all border-success/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Receitas do Mês</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">Receitas do Mês</CardTitle>
               <div className="p-2 rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
                 <TrendingUp className="w-4 h-4 text-success" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-success">
+              <div className="text-2xl sm:text-3xl font-bold text-success">
                 R$ {totals.income.toFixed(2)}
               </div>
             </CardContent>
@@ -400,27 +402,27 @@ const Finance = () => {
 
           <Card className="shadow-lg hover:shadow-xl transition-all border-destructive/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Despesas do Mês</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">Despesas do Mês</CardTitle>
               <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
                 <TrendingDown className="w-4 h-4 text-destructive" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-destructive">
+              <div className="text-2xl sm:text-3xl font-bold text-destructive">
                 R$ {totals.expense.toFixed(2)}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg hover:shadow-xl transition-all border-primary/10 bg-gradient-card group">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-primary/10 bg-gradient-card group sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Saldo do Mês</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">Saldo do Mês</CardTitle>
               <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                 <DollarSign className="w-4 h-4 text-primary" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold ${totals.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${totals.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
                 R$ {totals.balance.toFixed(2)}
               </div>
             </CardContent>
@@ -444,51 +446,55 @@ const Finance = () => {
                   </Card>
                 ) : transactions.length === 0 ? (
                   <Card className="shadow-lg">
-                    <CardContent className="py-8 text-center text-muted-foreground">
+                    <CardContent className="py-8 text-center text-sm sm:text-base text-muted-foreground">
                       Nenhuma transação neste mês. Crie sua primeira transação!
                     </CardContent>
                   </Card>
                 ) : (
-                  transactions.map((transaction) => (
-                    <Card key={transaction.id} className="shadow-md hover:shadow-lg transition-all border-l-4" style={{ borderLeftColor: transaction.categories?.color || "hsl(var(--border))" }}>
-                      <CardContent className="flex items-center justify-between p-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold">{transaction.title}</h3>
-                            {transaction.categories && (
-                              <span className="text-xs px-2 py-1 rounded-full" style={{ 
-                                backgroundColor: `${transaction.categories.color}20`,
-                                color: transaction.categories.color 
-                              }}>
-                                {transaction.categories.name}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(transaction.date).toLocaleDateString("pt-BR", { 
-                              day: '2-digit', 
-                              month: 'long' 
-                            })}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className={`text-lg font-bold ${
-                            transaction.type === "income" ? "text-success" : "text-destructive"
-                          }`}>
-                            {transaction.type === "income" ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => deleteTransaction(transaction.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-full px-4 sm:px-0 space-y-4">
+                      {transactions.map((transaction) => (
+                        <Card key={transaction.id} className="shadow-md hover:shadow-lg transition-all border-l-4" style={{ borderLeftColor: transaction.categories?.color || "hsl(var(--border))" }}>
+                          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 className="font-semibold text-sm sm:text-base truncate">{transaction.title}</h3>
+                                {transaction.categories && (
+                                  <span className="text-xs px-2 py-1 rounded-full whitespace-nowrap" style={{ 
+                                    backgroundColor: `${transaction.categories.color}20`,
+                                    color: transaction.categories.color 
+                                  }}>
+                                    {transaction.categories.name}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                {new Date(transaction.date).toLocaleDateString("pt-BR", { 
+                                  day: '2-digit', 
+                                  month: 'long' 
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 justify-between sm:justify-end">
+                              <div className={`text-lg sm:text-xl font-bold ${
+                                transaction.type === "income" ? "text-success" : "text-destructive"
+                              }`}>
+                                {transaction.type === "income" ? "+" : "-"} R$ {Number(transaction.amount).toFixed(2)}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-11 w-11 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => deleteTransaction(transaction.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </TabsContent>
 
