@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { History, Trash2, MessageSquare, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   role: "user" | "assistant";
@@ -30,22 +31,61 @@ export function AIHistoryCard({ onLoadConversation }: AIHistoryCardProps) {
     loadConversations();
   }, []);
 
-  const loadConversations = () => {
-    const stored = localStorage.getItem("ai_conversations");
-    if (stored) {
-      setConversations(JSON.parse(stored));
+  const loadConversations = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("ai_conversations")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+
+      const formatted: Conversation[] = (data || []).map(conv => ({
+        id: conv.id,
+        title: conv.title,
+        messages: (conv.messages as any) as Message[],
+        created_at: conv.created_at,
+      }));
+
+      setConversations(formatted);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o histórico.",
+        variant: "destructive",
+      });
     }
   };
 
-  const deleteConversation = (id: string, e: React.MouseEvent) => {
+  const deleteConversation = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = conversations.filter(c => c.id !== id);
-    setConversations(updated);
-    localStorage.setItem("ai_conversations", JSON.stringify(updated));
-    toast({
-      title: "Conversa excluída",
-      description: "O histórico foi removido.",
-    });
+    
+    try {
+      const { error } = await supabase
+        .from("ai_conversations")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setConversations(conversations.filter(c => c.id !== id));
+      toast({
+        title: "Conversa excluída",
+        description: "O histórico foi removido.",
+      });
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a conversa.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

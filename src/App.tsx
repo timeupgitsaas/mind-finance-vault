@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { KeyboardShortcuts } from "@/components/KeyboardShortcuts";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Finance from "./pages/Finance";
@@ -23,13 +24,13 @@ const App = () => (
       <BrowserRouter>
         <KeyboardShortcuts />
         <Routes>
-          <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/finance" element={<Finance />} />
-          <Route path="/notes" element={<Notes />} />
-          <Route path="/mindmap" element={<MindMap />} />
-          <Route path="/statistics" element={<Statistics />} />
-          <Route path="/diary" element={<Diary />} />
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/finance" element={<ProtectedRoute><Finance /></ProtectedRoute>} />
+          <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+          <Route path="/mindmap" element={<ProtectedRoute><MindMap /></ProtectedRoute>} />
+          <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
+          <Route path="/diary" element={<ProtectedRoute><Diary /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

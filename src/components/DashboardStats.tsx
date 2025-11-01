@@ -109,48 +109,56 @@ export function DashboardStats() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-lg hover:shadow-xl transition-all border-primary/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Tempo de Uso</CardTitle>
-            <Clock className="w-4 h-4 text-primary" />
+            <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <Clock className="w-4 h-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold text-primary">
               {Math.floor(stats.totalTime / 60)}h {stats.totalTime % 60}m
             </div>
             <p className="text-xs text-muted-foreground mt-1">Últimos 30 dias</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-lg hover:shadow-xl transition-all border-accent/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Ideias Criadas</CardTitle>
-            <Brain className="w-4 h-4 text-accent" />
+            <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
+              <Brain className="w-4 h-4 text-accent" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalIdeas}</div>
+            <div className="text-3xl font-bold text-accent">{stats.totalIdeas}</div>
             <p className="text-xs text-muted-foreground mt-1">Total do mês</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-lg hover:shadow-xl transition-all border-warning/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Sequência Ativa</CardTitle>
-            <Flame className="w-4 h-4 text-destructive" />
+            <div className="p-2 rounded-lg bg-warning/10 group-hover:bg-warning/20 transition-colors">
+              <Flame className="w-4 h-4 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.currentStreak}</div>
+            <div className="text-3xl font-bold text-warning">{stats.currentStreak}</div>
             <p className="text-xs text-muted-foreground mt-1">dias consecutivos</p>
           </CardContent>
         </Card>
 
-        <Card className="shadow-md hover:shadow-lg transition-all">
+        <Card className="shadow-lg hover:shadow-xl transition-all border-success/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Palavras Escritas</CardTitle>
-            <FileText className="w-4 h-4 text-success" />
+            <div className="p-2 rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
+              <FileText className="w-4 h-4 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.writingStats.words.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-success">{stats.writingStats.words.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               em {stats.writingStats.notes} notas
             </p>
@@ -159,10 +167,10 @@ export function DashboardStats() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-md">
+        <Card className="shadow-lg border-primary/10 bg-gradient-card">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Network className="w-4 h-4" />
+              <Network className="w-5 h-5 text-primary" />
               Tempo por Módulo (últimos 30 dias)
             </CardTitle>
           </CardHeader>
@@ -187,10 +195,10 @@ export function DashboardStats() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-md">
+        <Card className="shadow-lg border-accent/10 bg-gradient-card">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
+              <TrendingUp className="w-5 h-5 text-accent" />
               Evolução (últimos 7 dias)
             </CardTitle>
           </CardHeader>

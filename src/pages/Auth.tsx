@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,15 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/");
+      }
+    });
+  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,32 +80,32 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-primary mb-4 shadow-primary">
             <Sparkles className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Sistema Pessoal
+          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            Time Up Flow
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Gerencie suas finanças e ideias em um só lugar
+          <p className="text-muted-foreground mt-2 text-lg">
+            Sua plataforma completa de produtividade
           </p>
         </div>
 
-        <Card className="shadow-lg border-0">
-          <CardHeader>
-            <CardTitle>Acesse sua conta</CardTitle>
-            <CardDescription>
+        <Card className="shadow-2xl border-primary/10 backdrop-blur-sm bg-card/95">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl">Acesse sua conta</CardTitle>
+            <CardDescription className="text-base">
               Entre com suas credenciais ou crie uma nova conta
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Criar conta</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="signin" className="text-sm">Entrar</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm">Criar conta</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">

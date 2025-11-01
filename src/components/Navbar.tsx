@@ -37,11 +37,11 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="border-b bg-card/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+    <nav className="border-b border-border/50 bg-gradient-card backdrop-blur-xl sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 font-bold text-xl hover:scale-105 transition-transform">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-primary">
+          <Link to="/" className="flex items-center gap-2 font-bold text-xl group hover:scale-105 transition-all">
+            <div className="w-8 h-8 rounded-xl bg-gradient-primary flex items-center justify-center shadow-primary group-hover:shadow-lg transition-all">
               <Sparkles className="w-5 h-5 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
@@ -49,7 +49,7 @@ const Navbar = () => {
                 Time Up Flow
               </span>
               <span className="text-xs text-muted-foreground -mt-1">
-                Organização Inteligente de Ideias
+                Sua plataforma de produtividade
               </span>
             </div>
           </Link>
@@ -64,7 +64,7 @@ const Navbar = () => {
                   <Button
                     variant={isActive ? "default" : "ghost"}
                     size="sm"
-                    className="gap-2 transition-all"
+                    className={`gap-2 transition-all ${isActive ? 'shadow-primary' : 'hover:bg-accent/10'}`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
