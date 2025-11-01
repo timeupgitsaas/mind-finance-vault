@@ -5,6 +5,7 @@ import { useStatistics } from "@/hooks/useStatistics";
 import Navbar from "@/components/Navbar";
 import { FolderSidebar } from "@/components/FolderSidebar";
 import { MindMapControls } from "@/components/MindMapControls";
+import { MindMapCustomization } from "@/components/MindMapCustomization";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,9 @@ const MindMap = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [groupByFolder, setGroupByFolder] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [lineType, setLineType] = useState<"straight" | "curved">("curved");
+  const [lineColor, setLineColor] = useState("hsl(var(--primary))");
+  const [lineWidth, setLineWidth] = useState(3);
   const { toast } = useToast();
   const { trackActivity } = useStatistics("mindmap");
   const fgRef = useRef<any>();
@@ -371,7 +375,9 @@ const MindMap = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="shadow-xl border-primary/20 relative overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-3">
+                <Card className="shadow-xl border-primary/20 relative overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Network className="h-5 w-5" />
@@ -412,11 +418,11 @@ const MindMap = () => {
                     nodeColor="color"
                     linkColor={(link: any) => 
                       link.type === "manual" 
-                        ? "hsl(var(--primary))" 
+                        ? lineColor
                         : "hsl(var(--muted-foreground))"
                     }
-                    linkWidth={(link: any) => link.type === "manual" ? 3 : 2}
-                    linkCurvature={0.2}
+                    linkWidth={(link: any) => link.type === "manual" ? lineWidth : 2}
+                    linkCurvature={lineType === "curved" ? 0.2 : 0}
                     linkDirectionalParticles={(link: any) => link.type === "manual" ? 2 : 0}
                     linkDirectionalParticleSpeed={0.01}
                     d3AlphaDecay={0.02}
@@ -550,6 +556,19 @@ const MindMap = () => {
                 </div>
               </CardContent>
             </Card>
+              </div>
+              
+              <div className="lg:col-span-1">
+                <MindMapCustomization
+                  lineType={lineType}
+                  lineColor={lineColor}
+                  lineWidth={lineWidth}
+                  onLineTypeChange={setLineType}
+                  onLineColorChange={setLineColor}
+                  onLineWidthChange={setLineWidth}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>

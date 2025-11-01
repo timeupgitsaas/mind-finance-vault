@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "./ThemeToggle";
 import { HelpDialog } from "./HelpDialog";
+import { LanguageSelector } from "./LanguageSelector";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 import { 
@@ -79,6 +80,7 @@ const Navbar = () => {
             })}
 
             <HelpDialog />
+            <LanguageSelector />
             <ThemeToggle />
 
             <Button
@@ -94,6 +96,7 @@ const Navbar = () => {
 
           {/* Mobile Navigation */}
           <div className="flex md:hidden items-center gap-2">
+            <LanguageSelector />
             <ThemeToggle />
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
