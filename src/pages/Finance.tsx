@@ -348,12 +348,11 @@ const Finance = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Categoria (opcional)</Label>
-                    <Select value={categoryId} onValueChange={setCategoryId}>
+                    <Select value={categoryId || undefined} onValueChange={setCategoryId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria..." />
+                        <SelectValue placeholder="Sem categoria" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sem categoria</SelectItem>
                         {availableCategories.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.name}
