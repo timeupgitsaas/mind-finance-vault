@@ -375,9 +375,10 @@ const MindMap = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-3">
-                <Card className="shadow-xl border-primary/20 relative overflow-hidden">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="lg:col-span-3 order-2 lg:order-1">
+                  <Card className="shadow-xl border-primary/20 relative overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Network className="h-5 w-5" />
@@ -389,8 +390,8 @@ const MindMap = () => {
                   {connectMode && <span className="block mt-2 text-primary font-medium text-xs sm:text-sm">🔗 Clique em duas notas para conectá-las</span>}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="relative p-2 sm:p-6">
-                 <div className="w-full h-[400px] sm:h-[500px] lg:h-[calc(100vh-400px)] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-auto">
+              <CardContent className="relative p-2 sm:p-4 lg:p-6">
+                 <div className="w-full h-[350px] sm:h-[450px] lg:h-[calc(100vh-400px)] bg-gradient-to-br from-background to-primary/5 rounded-lg border-2 border-primary/20 shadow-inner overflow-hidden relative touch-auto">
                   <MindMapControls
                     zoom={zoom}
                     onZoomIn={handleZoomIn}
@@ -555,18 +556,19 @@ const MindMap = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-              </div>
-              
-              <div className="lg:col-span-1">
-                <MindMapCustomization
-                  lineType={lineType}
-                  lineColor={lineColor}
-                  lineWidth={lineWidth}
-                  onLineTypeChange={setLineType}
-                  onLineColorChange={setLineColor}
-                  onLineWidthChange={setLineWidth}
-                />
+              </Card>
+                </div>
+                
+                <div className="lg:col-span-1 order-1 lg:order-2">
+                  <MindMapCustomization
+                    lineType={lineType}
+                    lineColor={lineColor}
+                    lineWidth={lineWidth}
+                    onLineTypeChange={setLineType}
+                    onLineColorChange={setLineColor}
+                    onLineWidthChange={setLineWidth}
+                  />
+                </div>
               </div>
             </div>
           )}

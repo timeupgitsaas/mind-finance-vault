@@ -17,6 +17,12 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const loadLanguagePreference = async () => {
+    // First check localStorage for immediate load
+    const stored = localStorage.getItem('preferred-language') as Language | null;
+    if (stored) {
+      setLanguageState(stored);
+    }
+
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
@@ -29,16 +35,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       if (data?.language) {
         setLanguageState(data.language as Language);
+        localStorage.setItem('preferred-language', data.language);
       } else {
         // Auto-detect and save
-        const detected = detectBrowserLanguage();
+        const detected = stored || detectBrowserLanguage();
         setLanguageState(detected);
+        localStorage.setItem('preferred-language', detected);
         await saveLanguagePreference(detected);
       }
     } else {
-      // Not logged in, just detect
-      const detected = detectBrowserLanguage();
+      // Not logged in, use localStorage or detect
+      const detected = stored || detectBrowserLanguage();
       setLanguageState(detected);
+      localStorage.setItem('preferred-language', detected);
     }
   };
 
@@ -55,8 +64,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const setLanguage = async (lang: Language) => {
+    console.log('Setting language to:', lang);
     setLanguageState(lang);
     await saveLanguagePreference(lang);
+    // Force a re-render by updating localStorage as well
+    localStorage.setItem('preferred-language', lang);
   };
 
   return (

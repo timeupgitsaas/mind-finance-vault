@@ -31,20 +31,20 @@ export function MindMapCustomization({
   onLineWidthChange,
 }: MindMapCustomizationProps) {
   return (
-    <Card className="shadow-lg border-primary/10 bg-gradient-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <Palette className="h-5 w-5 text-accent" />
+    <Card className="shadow-lg border-primary/10 bg-gradient-card sticky top-4">
+      <CardHeader className="pb-3 sm:pb-4">
+        <CardTitle className="flex items-center gap-2 text-sm sm:text-base lg:text-lg">
+          <Palette className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
           🎨 Personalização
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6">
         <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Activity className="h-4 w-4" />
+          <Label className="flex items-center gap-2 text-xs sm:text-sm">
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4" />
             Tipo de Linha
           </Label>
-          <Select value={lineType} onValueChange={onLineTypeChange}>
+          <Select value={lineType} onValueChange={(value) => onLineTypeChange(value as "straight" | "curved")}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -66,11 +66,11 @@ export function MindMapCustomization({
         </div>
 
         <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
+          <Label className="flex items-center gap-2 text-xs sm:text-sm">
+            <Palette className="h-3 w-3 sm:h-4 sm:w-4" />
             Cor das Conexões
           </Label>
-          <Select value={lineColor} onValueChange={onLineColorChange}>
+          <Select value={lineColor} onValueChange={(value) => onLineColorChange(value)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -91,14 +91,14 @@ export function MindMapCustomization({
         </div>
 
         <div className="space-y-2">
-          <Label>Espessura da Linha: {lineWidth}px</Label>
+          <Label className="text-xs sm:text-sm">Espessura da Linha: {lineWidth}px</Label>
           <Slider
             value={[lineWidth]}
             onValueChange={(value) => onLineWidthChange(value[0])}
             min={1}
             max={8}
             step={1}
-            className="w-full"
+            className="w-full cursor-pointer"
           />
         </div>
       </CardContent>
