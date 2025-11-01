@@ -1,6 +1,15 @@
-# 🚀 Sistema SaaS Pessoal com IA
+# 🚀 Time Up Flow - Sistema SaaS Pessoal com IA
 
-Sistema web pessoal completo e moderno com autenticação, gerenciamento financeiro, sistema de notas tipo Obsidian com mapa mental, assistente de IA integrado e integração com Google Drive/Sheets.
+Sistema web pessoal completo e moderno com autenticação segura (email + Google OAuth), gerenciamento financeiro avançado, sistema de notas tipo Obsidian com mapa mental interativo, assistente de IA integrado e múltiplas funcionalidades de produtividade.
+
+## 📋 Índice
+
+- [Funcionalidades Principais](#-funcionalidades-principais)
+- [Autenticação e Segurança](#-autenticação-e-segurança)
+- [Tecnologias](#️-tecnologias)
+- [Configuração Inicial](#️-configuração-inicial)
+- [Como Usar](#-como-usar)
+- [Segurança Implementada](#-segurança-implementada)
 
 ## ✨ Funcionalidades Principais
 
@@ -70,99 +79,235 @@ Sistema web pessoal completo e moderno com autenticação, gerenciamento finance
 - **Editor**: @uiw/react-md-editor
 - **Visualização**: react-force-graph-2d
 
-## ⚙️ Configuração da Integração Google
+## ⚙️ Configuração Inicial
 
-### Por que usar o SDK Google Identity Services?
+### 1. Clonar o Repositório
 
-A implementação anterior usava OAuth manual com redirects, o que causava erros 404 e era mais complexa. 
-Agora usamos o **Google Identity Services SDK**, que é:
-- ✅ Mais moderno e recomendado pelo Google
-- ✅ Sem redirects complicados
-- ✅ Login em popup ou inline
-- ✅ Integração mais simples
-- ✅ Melhor experiência do usuário
-
-### Passos para Configurar
-
-#### 1. Criar Projeto no Google Cloud Console
-
-1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
-2. Crie um novo projeto ou selecione um existente
-3. Habilite as APIs necessárias:
-   - **Google Drive API**
-   - **Google Sheets API**
-
-#### 2. Configurar Credenciais OAuth 2.0
-
-1. Vá para **APIs & Services > Credentials**
-2. Clique em **Create Credentials > OAuth client ID**
-3. Configure:
-   - **Application type**: Web application
-   - **Authorized JavaScript origins**: 
-     - `http://localhost:5173` (desenvolvimento)
-     - `https://seu-dominio.com` (produção)
-   - **Authorized redirect URIs**: (não necessário para SDK, mas configure se usar as edge functions)
-     - `https://seu-projeto.lovableproject.com`
-
-4. Copie o **Client ID** gerado
-
-#### 3. Adicionar Client ID ao Código
-
-Edite o arquivo `src/components/GoogleSignIn.tsx`:
-
-```typescript
-client_id: "SEU_CLIENT_ID_AQUI.apps.googleusercontent.com"
+```bash
+git clone <YOUR_GIT_URL>
+cd <YOUR_PROJECT_NAME>
+npm install
+npm run dev
 ```
 
-#### 4. (Opcional) Configurar Secrets para Backup
+### 2. Configurar Autenticação
 
-Se quiser usar as funcionalidades de backup no Drive, adicione no Backend:
+O sistema já está configurado com **Lovable Cloud**, incluindo:
+- ✅ Banco de dados PostgreSQL
+- ✅ Autenticação com email
+- ✅ Sistema de usuários
+- ✅ Edge Functions para IA
+
+### 3. Ativar Login com Google (Opcional)
+
+Siga os passos em [Autenticação e Segurança](#-autenticação-e-segurança)
+
+### 4. Primeiro Acesso
+
+1. Acesse `http://localhost:5173` (desenvolvimento)
+2. Vá para `/auth` para criar sua conta
+3. Escolha entre email ou Google
+4. Se usar email, **verifique seu email** antes de fazer login
+
+## 📱 Como Usar
+
+### Dashboard Principal
+
+Após fazer login, você terá acesso ao dashboard com:
+- **Estatísticas financeiras** em tempo real
+- **Gráficos interativos** de receitas e despesas
+- **Widgets personalizáveis** (arraste para reorganizar)
+- **Chat com IA** integrado
+- **Insights automáticos**
+
+### 💰 Gerenciar Finanças
+
+1. **Adicionar Transação**:
+   - Clique em "Nova Transação" ou pressione `Ctrl+K`
+   - Preencha descrição, valor, categoria e tipo
+   - Salve e veja os gráficos atualizarem
+
+2. **Criar Categorias**:
+   - Vá em "Categorias"
+   - Crie categorias personalizadas com cores e ícones
+   - Organize suas finanças do seu jeito
+
+3. **Definir Metas**:
+   - Acesse "Metas Financeiras"
+   - Defina valor alvo e prazo
+   - Acompanhe o progresso em tempo real
+
+4. **Despesas Recorrentes**:
+   - Configure assinaturas e contas fixas
+   - O sistema lembrará você automaticamente
+   - Veja o impacto mensal das recorrências
+
+5. **Exportar Dados**:
+   - Exporte para Google Sheets
+   - Faça backup no Google Drive
+   - Baixe relatórios em CSV
+
+### 📝 Sistema de Notas
+
+1. **Criar Notas**:
+   - Pressione `Ctrl+K` → "Nova Nota"
+   - Use Markdown para formatação
+   - Adicione tags para organização
+
+2. **Links Internos**:
+   - Use `[[nome-da-nota]]` para criar links
+   - Navegue entre notas facilmente
+   - Construa sua rede de conhecimento
+
+3. **Mapa Mental**:
+   - Visualize conexões entre notas
+   - Modo 2D e 3D disponíveis
+   - Organize ideias visualmente
+
+4. **Busca Inteligente**:
+   - Busca semântica com IA
+   - Encontre notas por contexto
+   - Sugestões automáticas de conexões
+
+### 🤖 Assistente de IA
+
+1. **Chat com IA**:
+   - Pergunte sobre seus dados
+   - Exemplos:
+     - "Quanto gastei este mês em alimentação?"
+     - "Resuma minhas notas sobre projetos"
+     - "Quais metas estou mais próximo de atingir?"
+
+2. **Insights Automáticos**:
+   - **Resumo Semanal**: Visão geral da semana
+   - **Análise de Gastos**: Padrões e oportunidades
+   - **Sugestões de Metas**: Baseadas no seu histórico
+
+3. **Análise de Notas**:
+   - Sugestões de conexões entre notas
+   - Identificação de temas comuns
+   - Recomendações de organização
+
+### ⌨️ Terminal de Comandos (Ctrl+K)
+
+Pressione `Ctrl+K` e digite:
+- `nova nota` - Criar nota rápida
+- `nova transação` - Adicionar transação
+- `chat ia` - Abrir chat com IA
+- `modo escuro` - Alternar tema
+- `estatísticas` - Ver relatórios
+- `mapa mental` - Visualizar notas
+- `buscar` - Busca global
+
+## 🔐 Autenticação e Segurança
+
+### Sistema de Autenticação
+
+O sistema oferece **duas formas de acesso**:
+
+#### 1. **Login com Email e Senha** 
+- Cadastro tradicional com email e senha (mínimo 6 caracteres)
+- **Verificação de email obrigatória** após cadastro
+- Sistema de recuperação de senha
+- Sessão persistente e segura
+
+#### 2. **Login Social com Google**
+- Login rápido via conta Google
+- OAuth 2.0 integrado
+- Sem necessidade de senha
+- Acesso instantâneo após autorização
+
+### Como Criar Conta
+
+1. Acesse a página de login em `/auth`
+2. Escolha entre:
+   - **Criar conta** (email/senha) - Será necessário verificar o email
+   - **Entrar com Google** - Acesso imediato após autorização
+3. Após login, você será redirecionado para o dashboard
+
+### Configuração do Login com Google
+
+Para ativar o login com Google, configure no **Lovable Cloud**:
 
 <lov-actions>
-  <lov-open-backend>Abrir Backend</lov-open-backend>
+  <lov-open-backend>Configurar Login Google</lov-open-backend>
 </lov-actions>
 
-Adicione os secrets:
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+Vá em **Users → Auth Settings → Google Settings** e adicione:
+- **Client ID** do Google Cloud Console
+- **Client Secret** do Google Cloud Console
 
-### Testando a Integração
+#### Criar Credenciais Google OAuth
 
-1. Abra o dashboard da aplicação
-2. Clique em "Entrar com Google"
-3. Faça login com sua conta Google
-4. Conceda as permissões necessárias
-5. Você verá seu nome e email exibidos
+1. Acesse [Google Cloud Console](https://console.cloud.google.com/)
+2. Crie/selecione um projeto
+3. Vá em **APIs & Services > Credentials**
+4. Clique **Create Credentials > OAuth client ID**
+5. Configure:
+   - **Application type**: Web application
+   - **Authorized JavaScript origins**: 
+     - `https://seu-projeto.lovableproject.com`
+     - `https://seu-dominio.com` (se tiver)
+   - **Authorized redirect URIs**:
+     - `https://odkwywctpcntgvojnkor.supabase.co/auth/v1/callback`
+6. Copie o **Client ID** e **Client Secret**
+7. Cole nas configurações do Lovable Cloud
 
-## 🤖 Como Usar a IA
+### URLs Autorizadas
 
-### Chat com IA
-- Acesse o dashboard e use o widget "Chat com IA"
-- Faça perguntas sobre seus dados:
-  - "Quanto gastei este mês?"
-  - "Quais são minhas notas sobre marketing?"
-  - "Resuma meu progresso nas metas"
+Certifique-se de adicionar estas URLs no Google Cloud Console:
 
-### Insights Automáticos
-- No widget "Insights com IA", escolha:
-  - **Resumo Semanal**: Análise geral da semana
-  - **Análise de Gastos**: Identifica padrões e oportunidades
-  - **Sugestões de Metas**: IA sugere metas baseadas no seu histórico
+**JavaScript origins**:
+- `https://6b0351b3-5643-4969-a15a-38cd8cd9945c.lovableproject.com`
+- Seu domínio personalizado (se tiver)
 
-### Terminal de Comandos
-- Pressione **Ctrl+K** (ou Cmd+K no Mac)
-- Digite comandos como:
-  - "Nova nota"
-  - "Adicionar transação"
-  - "Chat com IA"
-  - "Modo escuro"
+**Redirect URIs**:
+- `https://odkwywctpcntgvojnkor.supabase.co/auth/v1/callback`
 
-## 🔐 Segurança
+## 🔒 Segurança Implementada
 
-- Autenticação via Supabase Auth
-- Row Level Security (RLS) em todas as tabelas
-- Tokens Google criptografados
-- OAuth 2.0 individual por usuário
+### Proteção de Dados
+- ✅ **Row Level Security (RLS)** em todas as tabelas
+- ✅ **Políticas de acesso** granulares por usuário
+- ✅ **Isolamento completo** de dados entre usuários
+- ✅ Apenas o dono pode ver/editar seus dados
+
+### Autenticação Segura
+- ✅ Senhas criptografadas com bcrypt
+- ✅ Verificação de email obrigatória
+- ✅ OAuth 2.0 com Google
+- ✅ Tokens JWT seguros e com renovação automática
+- ✅ Sessões persistentes em localStorage
+
+### Proteção de Dados Sensíveis
+- ✅ **Transações financeiras**: protegidas por RLS
+- ✅ **Entradas de diário**: visíveis apenas pelo autor
+- ✅ **Conversas com IA**: privadas por usuário
+- ✅ **Tokens Google**: criptografados e isolados
+- ✅ **Notas e anotações**: acesso restrito ao dono
+
+### Políticas RLS Implementadas
+
+Todas as tabelas possuem políticas completas de:
+- **SELECT**: Usuário vê apenas seus dados
+- **INSERT**: Usuário cria apenas para si
+- **UPDATE**: Usuário edita apenas seus dados
+- **DELETE**: Usuário remove apenas seus dados
+
+Tabelas protegidas:
+- `notes` (notas e anotações)
+- `transactions` (finanças)
+- `categories` (categorias personalizadas)
+- `financial_goals` (metas financeiras)
+- `recurring_transactions` (despesas recorrentes)
+- `diary_entries` (entradas de diário)
+- `ai_conversations` (conversas com IA)
+- `ai_feedback` (feedback da IA)
+- `google_tokens` (tokens OAuth)
+- `exports` (exportações)
+- `user_statistics` (estatísticas)
+- `user_preferences` (preferências)
+- `folders` (pastas de organização)
 
 ---
 
