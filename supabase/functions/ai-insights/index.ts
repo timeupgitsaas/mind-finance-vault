@@ -44,9 +44,9 @@ serve(async (req) => {
     const { type } = await req.json();
 
     // Validate input
-    const validTypes = ["weekly", "spending", "goals"];
+    const validTypes = ["weekly-summary", "spending-analysis", "goal-suggestions"];
     if (!type || !validTypes.includes(type)) {
-      throw new Error("Invalid insight type");
+      throw new Error("Invalid insight type. Must be one of: weekly-summary, spending-analysis, goal-suggestions");
     }
 
     // Get user data
