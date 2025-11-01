@@ -51,14 +51,23 @@ serve(async (req) => {
     }
 
     const { noteId, analysisType } = await req.json();
+    
+    console.log("[ai-note-analysis] Request received:", {
+      noteId,
+      analysisType,
+      userId: user.id,
+      timestamp: new Date().toISOString()
+    });
 
     // Validate input
     if (!noteId || typeof noteId !== "string" || !noteId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      console.error("[ai-note-analysis] Invalid note ID format:", noteId);
       throw new Error("Invalid note ID format");
     }
 
     const validAnalysisTypes = ["similar", "insights"];
     if (!analysisType || !validAnalysisTypes.includes(analysisType)) {
+      console.error("[ai-note-analysis] Invalid analysis type:", analysisType);
       throw new Error("Invalid analysis type");
     }
 
@@ -69,17 +78,37 @@ serve(async (req) => {
       .eq("user_id", user.id);
 
     if (notesError) {
+      console.error("[ai-note-analysis] Error fetching notes:", notesError);
       throw notesError;
     }
+
+    console.log("[ai-note-analysis] Fetched notes:", {
+      count: notes?.length || 0,
+      noteIds: notes?.map((n: any) => n.id) || [],
+      searchingFor: noteId
+    });
 
     // Find the current note
     const currentNote = notes?.find((n: any) => n.id === noteId);
     if (!currentNote) {
-      return new Response(JSON.stringify({ error: "Note not found" }), {
+      console.error("[ai-note-analysis] Note not found:", {
+        noteId,
+        userId: user.id,
+        availableNoteIds: notes?.map((n: any) => n.id) || []
+      });
+      return new Response(JSON.stringify({ 
+        error: "Note not found",
+        details: "The requested note does not exist or does not belong to your account"
+      }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    
+    console.log("[ai-note-analysis] Found note:", {
+      noteId: currentNote.id,
+      title: currentNote.title
+    });
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
