@@ -83,17 +83,32 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
 
-    if (error) {
+      if (error) {
+        console.error('Google OAuth error:', error);
+        toast({
+          title: "Erro ao fazer login com Google",
+          description: error.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
       toast({
-        title: "Erro ao fazer login com Google",
-        description: error.message,
+        title: "Erro inesperado",
+        description: "Tente novamente mais tarde.",
         variant: "destructive",
       });
       setLoading(false);
