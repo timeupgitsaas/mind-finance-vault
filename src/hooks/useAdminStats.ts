@@ -31,7 +31,7 @@ export function useAdminStats() {
       try {
         setLoading(true);
 
-        // Get total users count
+        // Get total users count from user_preferences
         const { count: totalUsers } = await supabase
           .from('user_preferences')
           .select('*', { count: 'exact', head: true });
@@ -84,13 +84,17 @@ export function useAdminStats() {
           p.status === 'failed'
         ).length || 0;
 
-        // Calculate new users
-        const newUsersLast7Days = subscriptions?.filter(s => 
-          new Date(s.created_at) >= last7Days
+        // Calculate new users (from user_preferences)
+        const { data: allPreferences } = await supabase
+          .from('user_preferences')
+          .select('created_at');
+
+        const newUsersLast7Days = allPreferences?.filter(p => 
+          new Date(p.created_at) >= last7Days
         ).length || 0;
 
-        const newUsersLast30Days = subscriptions?.filter(s => 
-          new Date(s.created_at) >= last30Days
+        const newUsersLast30Days = allPreferences?.filter(p => 
+          new Date(p.created_at) >= last30Days
         ).length || 0;
 
         // Calculate conversion rate

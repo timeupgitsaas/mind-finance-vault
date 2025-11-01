@@ -21,6 +21,8 @@ interface User {
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
+  plan_type?: string;
+  role?: string;
 }
 
 export default function AdminUsers() {
@@ -37,12 +39,45 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       
-      // Fetch users from auth.users via admin API
-      const { data: { users: authUsers }, error } = await supabase.auth.admin.listUsers();
+      // Fetch all user_preferences (one per user)
+      const { data: preferences, error: prefError } = await supabase
+        .from('user_preferences')
+        .select('user_id, created_at');
       
-      if (error) throw error;
+      if (prefError) throw prefError;
+
+      // For each user, fetch their email and additional data
+      const usersData: User[] = await Promise.all(
+        (preferences || []).map(async (pref) => {
+          // Get subscription data
+          const { data: subscription } = await supabase
+            .from('subscriptions')
+            .select('plan_type')
+            .eq('user_id', pref.user_id)
+            .single();
+
+          // Get role
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', pref.user_id)
+            .single();
+
+          // Get user metadata from auth (this works for admins)
+          const { data: { user: authUser } } = await supabase.auth.admin.getUserById(pref.user_id);
+
+          return {
+            id: pref.user_id,
+            email: authUser?.email || 'N/A',
+            created_at: authUser?.created_at || pref.created_at,
+            last_sign_in_at: authUser?.last_sign_in_at || null,
+            plan_type: subscription?.plan_type || 'free',
+            role: roleData?.role || 'user',
+          };
+        })
+      );
       
-      setUsers(authUsers as User[]);
+      setUsers(usersData);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -103,46 +138,84 @@ export default function AdminUsers() {
               <TableHeader>
                 <TableRow className="border-[#334155] hover:bg-[#0f172a]">
                   <TableHead className="text-[#f1f5f9]">Email</TableHead>
+                  <TableHead className="text-[#f1f5f9]">Plano</TableHead>
+                  <TableHead className="text-[#f1f5f9]">Tipo</TableHead>
                   <TableHead className="text-[#f1f5f9]">Data de Cadastro</TableHead>
                   <TableHead className="text-[#f1f5f9]">Último Acesso</TableHead>
-                  <TableHead className="text-[#f1f5f9]">Status</TableHead>
                   <TableHead className="text-[#f1f5f9]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow 
-                    key={user.id} 
-                    className="border-[#334155] hover:bg-[#0f172a]"
-                  >
-                    <TableCell className="text-[#f1f5f9]">{user.email}</TableCell>
-                    <TableCell className="text-[#f1f5f9]">
-                      {formatDate(user.created_at)}
-                    </TableCell>
-                    <TableCell className="text-[#f1f5f9]">
-                      {formatDate(user.last_sign_in_at)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline"
-                        className="bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20"
-                      >
-                        Ativo
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setSelectedUser(user)}
-                        className="text-[#f1f5f9] hover:bg-[#334155]"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Ver Detalhes
-                      </Button>
+                {filteredUsers.length === 0 ? (
+                  <TableRow>
+                    <TableCell 
+                      colSpan={6} 
+                      className="text-center text-muted-foreground py-8"
+                    >
+                      {searchTerm ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredUsers.map((user) => {
+                    const getPlanBadge = (plan: string) => {
+                      const colors: Record<string, string> = {
+                        free: 'bg-[#94a3b8]/10 text-[#94a3b8] border-[#94a3b8]/20',
+                        basic: 'bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20',
+                        pro: 'bg-[#8b5cf6]/10 text-[#8b5cf6] border-[#8b5cf6]/20',
+                        enterprise: 'bg-[#10b981]/10 text-[#10b981] border-[#10b981]/20',
+                      };
+                      return colors[plan] || colors.free;
+                    };
+
+                    const getRoleBadge = (role: string) => {
+                      if (role === 'superadmin') return 'bg-[#8b5cf6]/10 text-[#8b5cf6] border-[#8b5cf6]/20';
+                      if (role === 'admin') return 'bg-[#3b82f6]/10 text-[#3b82f6] border-[#3b82f6]/20';
+                      return 'bg-[#64748b]/10 text-[#64748b] border-[#64748b]/20';
+                    };
+
+                    return (
+                      <TableRow 
+                        key={user.id} 
+                        className="border-[#334155] hover:bg-[#0f172a]"
+                      >
+                        <TableCell className="text-[#f1f5f9]">{user.email}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline"
+                            className={getPlanBadge(user.plan_type || 'free')}
+                          >
+                            {(user.plan_type || 'free').toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline"
+                            className={getRoleBadge(user.role || 'user')}
+                          >
+                            {(user.role || 'user').toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-[#f1f5f9]">
+                          {formatDate(user.created_at)}
+                        </TableCell>
+                        <TableCell className="text-[#f1f5f9]">
+                          {formatDate(user.last_sign_in_at)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedUser(user)}
+                            className="text-[#f1f5f9] hover:bg-[#334155]"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </div>
