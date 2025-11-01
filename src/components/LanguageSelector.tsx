@@ -9,7 +9,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function LanguageSelector() {
-  const { language, setLanguage } = useLanguage();
+  const context = useLanguage();
+  
+  // Don't render until context is available
+  if (!context) {
+    return (
+      <Button variant="ghost" size="icon" className="w-9 h-9 opacity-50 cursor-not-allowed">
+        <Languages className="h-4 w-4" />
+      </Button>
+    );
+  }
+  
+  const { language, setLanguage } = context;
 
   return (
     <DropdownMenu>
