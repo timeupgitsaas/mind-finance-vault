@@ -119,54 +119,62 @@ const Index = () => {
       <Navbar />
       <CommandPalette />
       
-      <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
-            Time Up Flow
+      <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="text-center sm:text-left mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+            Bem-vindo de volta! 👋
           </h1>
-          <p className="text-muted-foreground">Organização Inteligente de Ideias</p>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Sua central de produtividade e organização pessoal
+          </p>
         </div>
 
         <DashboardStats />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-success/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-              <TrendingUp className="w-4 h-4 text-success" />
+              <CardTitle className="text-xs sm:text-sm font-medium">💰 Receitas</CardTitle>
+              <div className="p-2 rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
+                <TrendingUp className="w-4 h-4 text-success" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">
+              <div className="text-2xl sm:text-3xl font-bold text-success">
                 R$ {totals.income.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Últimas {transactions.filter(t => t.type === "income").length} transações
+                {transactions.filter(t => t.type === "income").length} transações
               </p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-destructive/10 bg-gradient-card group">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-              <TrendingDown className="w-4 h-4 text-destructive" />
+              <CardTitle className="text-xs sm:text-sm font-medium">💸 Despesas</CardTitle>
+              <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
+                <TrendingDown className="w-4 h-4 text-destructive" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">
+              <div className="text-2xl sm:text-3xl font-bold text-destructive">
                 R$ {totals.expense.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Últimas {transactions.filter(t => t.type === "expense").length} transações
+                {transactions.filter(t => t.type === "expense").length} transações
               </p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
+          <Card className="shadow-lg hover:shadow-xl transition-all border-primary/10 bg-gradient-card group sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-              <Wallet className="w-4 h-4 text-primary" />
+              <CardTitle className="text-xs sm:text-sm font-medium">💵 Saldo</CardTitle>
+              <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <Wallet className="w-4 h-4 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <div className={`text-2xl sm:text-3xl font-bold ${totals.balance >= 0 ? 'text-success' : 'text-destructive'}`}>
                 R$ {totals.balance.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -185,14 +193,14 @@ const Index = () => {
 
         <AIChat />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="shadow-md">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <Card className="shadow-lg border-primary/10 bg-gradient-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5" />
-                Notas Recentes
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                <FileText className="w-5 h-5 text-accent" />
+                📝 Notas Recentes
               </CardTitle>
-              <CardDescription>Suas últimas anotações</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Suas últimas anotações</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {notes.length === 0 ? (
@@ -217,10 +225,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-md">
+          <Card className="shadow-lg border-primary/10 bg-gradient-card">
             <CardHeader>
-              <CardTitle>Acesso Rápido</CardTitle>
-              <CardDescription>Navegue para suas funcionalidades</CardDescription>
+              <CardTitle className="text-base sm:text-lg">🚀 Acesso Rápido</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">Navegue para suas funcionalidades</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3">
               <Button

@@ -278,8 +278,10 @@ const Finance = () => {
       <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Finanças</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Gerencie suas receitas e despesas</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              💰 Controle Financeiro
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Gerencie suas receitas e despesas com inteligência</p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <div className="flex items-center gap-2">

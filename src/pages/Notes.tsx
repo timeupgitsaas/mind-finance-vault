@@ -398,12 +398,12 @@ const Notes = () => {
         
         <div className="container mx-auto p-6 space-y-6 animate-fade-in">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Time Up Flow
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                📚 Minhas Notas
               </h1>
-              <p className="text-muted-foreground">Organização Inteligente de Ideias</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Organize suas ideias e pensamentos</p>
             </div>
             
             <TabsList className="grid w-[400px] grid-cols-3">

@@ -183,13 +183,13 @@ export default function Statistics() {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
         
-        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+        <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             📊 Minha Jornada
           </h1>
-          <p className="text-muted-foreground">Acompanhe seu progresso e evolução</p>
+          <p className="text-sm sm:text-base text-muted-foreground">Acompanhe seu progresso e evolução pessoal</p>
         </div>
 
         <Tabs value={period} onValueChange={(v) => setPeriod(v as Period)}>
@@ -202,11 +202,13 @@ export default function Statistics() {
       </div>
 
       {/* Cards de Destaque */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="shadow-lg hover:shadow-xl transition-all border-primary/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">⏱️ Tempo Total</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">⏱️ Tempo Total</CardTitle>
+            <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+              <Clock className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{Math.floor(stats.totalTime / 60)}h {stats.totalTime % 60}m</div>
@@ -216,10 +218,12 @@ export default function Statistics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-all border-accent/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">💡 Ideias Criadas</CardTitle>
-            <Brain className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">💡 Ideias Criadas</CardTitle>
+            <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
+              <Brain className="h-4 w-4 text-accent" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalIdeas}</div>
@@ -227,10 +231,12 @@ export default function Statistics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-all border-warning/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">🔥 Sequência Atual</CardTitle>
-            <Flame className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">🔥 Sequência Atual</CardTitle>
+            <div className="p-2 rounded-lg bg-warning/10 group-hover:bg-warning/20 transition-colors">
+              <Flame className="h-4 w-4 text-warning" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.currentStreak} dias</div>
@@ -238,10 +244,12 @@ export default function Statistics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg hover:shadow-xl transition-all border-success/10 bg-gradient-card group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">🏆 Ranking</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs sm:text-sm font-medium">🏆 Ranking</CardTitle>
+            <div className="p-2 rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
+              <Trophy className="h-4 w-4 text-success" />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">Top 10%</div>
@@ -251,10 +259,10 @@ export default function Statistics() {
       </div>
 
       {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <Card className="shadow-lg border-primary/10 bg-gradient-card">
           <CardHeader>
-            <CardTitle>Tempo por Módulo</CardTitle>
+            <CardTitle className="text-base sm:text-lg">⏰ Tempo por Módulo</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -269,9 +277,9 @@ export default function Statistics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-primary/10 bg-gradient-card">
           <CardHeader>
-            <CardTitle>Evolução de Ideias (Últimos 30 Dias)</CardTitle>
+            <CardTitle className="text-base sm:text-lg">📈 Evolução de Ideias (30 Dias)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -288,11 +296,11 @@ export default function Statistics() {
       </div>
 
       {/* Estatísticas Detalhadas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="shadow-lg border-primary/10 bg-gradient-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <FileText className="h-5 w-5 text-accent" />
               ✍️ Escrita
             </CardTitle>
           </CardHeader>
@@ -312,10 +320,10 @@ export default function Statistics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-primary/10 bg-gradient-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Network className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Network className="h-5 w-5 text-primary" />
               🔗 Conexões
             </CardTitle>
           </CardHeader>
@@ -339,10 +347,10 @@ export default function Statistics() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-lg border-primary/10 bg-gradient-card sm:col-span-2 lg:col-span-1">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Calendar className="h-5 w-5 text-success" />
               ⏰ Atividade
             </CardTitle>
           </CardHeader>

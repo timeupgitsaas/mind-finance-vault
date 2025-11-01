@@ -299,11 +299,11 @@ const MindMap = () => {
         <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Mapa Mental
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                🧠 Mapa de Conexões
               </h1>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Visualize as conexões entre suas notas
+                Visualize e conecte suas ideias de forma intuitiva
               </p>
             </div>
             

@@ -144,19 +144,19 @@ export default function Diary() {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar />
         
-        <div className="container mx-auto p-6 space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2">
-              <BookOpen className="w-8 h-8 text-primary" />
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
+              <BookOpen className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
               📖 Meu Diário
             </h1>
-            <p className="text-muted-foreground">Registre seus pensamentos e emoções</p>
+            <p className="text-sm sm:text-base text-muted-foreground">Registre seus pensamentos e emoções do dia a dia</p>
           </div>
 
-          <Button onClick={handleNewEntry}>
+          <Button onClick={handleNewEntry} className="h-11 w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
-            Nova Entrada
+            <span className="sm:inline">Nova Entrada</span>
           </Button>
         </div>
 
@@ -215,9 +215,9 @@ export default function Diary() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {entries.map((entry) => (
-              <Card key={entry.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+              <Card key={entry.id} className="shadow-lg hover:shadow-xl transition-all cursor-pointer border-primary/10 bg-gradient-card">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
