@@ -747,6 +747,78 @@ export const FlowBoard = () => {
         </Badge>
       )}
 
+      {/* Edit Block Modal */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Bloco</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do bloco
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-title">Título</Label>
+              <Input
+                id="edit-title"
+                placeholder="Título do bloco"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-content">Conteúdo</Label>
+              <Textarea
+                id="edit-content"
+                placeholder="Conteúdo do bloco (opcional)"
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-color">Cor</Label>
+              <Select value={editColor} onValueChange={setEditColor}>
+                <SelectTrigger id="edit-color">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {colors.map(color => (
+                    <SelectItem key={color} value={color}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded"
+                          style={{ backgroundColor: color }}
+                        />
+                        {color}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveBlockEdit} className="flex-1">
+                Salvar Alterações
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingBlock(null);
+                  setEditTitle("");
+                  setEditContent("");
+                  setEditColor("#8B5CF6");
+                }} 
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Block Detail Modal */}
       <Dialog open={isBlockDetailOpen} onOpenChange={setIsBlockDetailOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
