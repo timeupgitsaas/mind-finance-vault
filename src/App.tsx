@@ -14,6 +14,7 @@ import Notes from "./pages/Notes";
 import MindMap from "./pages/MindMap";
 import Statistics from "./pages/Statistics";
 import Diary from "./pages/Diary";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Route path="/mindmap" element={<ProtectedRoute><MindMap /></ProtectedRoute>} />
               <Route path="/statistics" element={<ProtectedRoute><Statistics /></ProtectedRoute>} />
               <Route path="/diary" element={<ProtectedRoute><Diary /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

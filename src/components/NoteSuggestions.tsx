@@ -1,20 +1,24 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Link2, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Sparkles, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface NoteSuggestionsProps {
   noteId: string;
   onConnectionAccept: (targetNoteId: string) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function NoteSuggestions({ noteId, onConnectionAccept }: NoteSuggestionsProps) {
+export function NoteSuggestions({ noteId, onConnectionAccept, open, onOpenChange }: NoteSuggestionsProps) {
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<any>(null);
   const { toast } = useToast();
+  const { t, language } = useTranslation();
 
   const analyzeSimilarNotes = async () => {
     setLoading(true);
@@ -25,35 +29,42 @@ export function NoteSuggestions({ noteId, onConnectionAccept }: NoteSuggestionsP
         throw new Error("Você precisa estar autenticado para usar esta funcionalidade");
       }
 
-      const { data, error } = await supabase.functions.invoke("ai-note-analysis", {
-        body: {
-          noteId,
-          analysisType: "similar",
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+    const response = await supabase.functions.invoke("ai-note-analysis", {
+      body: {
+        noteId,
+        analysisType: "similar",
+      },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
 
-      if (error) {
-        console.error("Edge function error:", error);
-        throw new Error(error.message || "Erro ao analisar conexões. Tente novamente.");
-      }
+    if (response.error) {
+      console.error("Edge function error:", response.error);
+      const errorMsg = response.error.message || "Erro ao analisar conexões.";
+      throw new Error(errorMsg);
+    }
 
-      if (!data || !data.analysis) {
-        throw new Error("Resposta inválida do servidor");
-      }
+    const data = response.data;
+    
+    if (!data || !data.analysis) {
+      throw new Error("Resposta inválida do servidor");
+    }
 
       setSuggestions(data.analysis);
       toast({
-        title: "Análise Concluída",
-        description: "A IA encontrou conexões interessantes!",
+        title: language === "pt" ? "Análise Concluída" : "Analysis Complete",
+        description: language === "pt" 
+          ? "A IA encontrou conexões interessantes!" 
+          : "AI found interesting connections!",
       });
     } catch (error: any) {
       console.error("Error analyzing notes:", error);
       toast({
-        title: "Erro na análise",
-        description: error.message || "Erro ao processar a análise. Verifique sua conexão e tente novamente.",
+        title: language === "pt" ? "Erro na análise" : "Analysis Error",
+        description: error.message || (language === "pt" 
+          ? "Erro ao processar a análise. Verifique sua conexão e tente novamente." 
+          : "Error processing analysis. Check your connection and try again."),
         variant: "destructive",
       });
     } finally {
@@ -75,64 +86,69 @@ export function NoteSuggestions({ noteId, onConnectionAccept }: NoteSuggestionsP
     if (feedback === "accept") {
       onConnectionAccept(suggestionData.targetNoteId);
       toast({
-        title: "Conexão Criada",
-        description: "A nota foi conectada com sucesso!",
+        title: language === "pt" ? "Conexão Criada" : "Connection Created",
+        description: language === "pt" 
+          ? "A nota foi conectada com sucesso!" 
+          : "Note was successfully connected!",
       });
     }
   };
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          Sugestões Inteligentes
-        </CardTitle>
-        <CardDescription>
-          A IA pode analisar esta nota e sugerir conexões com outras notas relacionadas
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {!suggestions && (
-          <Button 
-            onClick={analyzeSimilarNotes} 
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analisando...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Analisar Conexões
-              </>
-            )}
-          </Button>
-        )}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {language === "pt" ? "Sugestões Inteligentes" : "Smart Suggestions"}
+          </DialogTitle>
+          <DialogDescription>
+            {language === "pt" 
+              ? "A IA pode analisar esta nota e sugerir conexões com outras notas relacionadas" 
+              : "AI can analyze this note and suggest connections with related notes"}
+          </DialogDescription>
+        </DialogHeader>
+        <CardContent className="space-y-4">
+          {!suggestions && (
+            <Button 
+              onClick={analyzeSimilarNotes} 
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {language === "pt" ? "Analisando..." : "Analyzing..."}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {language === "pt" ? "Analisar Conexões" : "Analyze Connections"}
+                </>
+              )}
+            </Button>
+          )}
 
-        {suggestions && (
-          <div className="space-y-4">
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <div className="text-sm whitespace-pre-wrap">{suggestions}</div>
+          {suggestions && (
+            <div className="space-y-4">
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <div className="text-sm whitespace-pre-wrap">{suggestions}</div>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={analyzeSimilarNotes}
+                  disabled={loading}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {language === "pt" ? "Analisar Novamente" : "Analyze Again"}
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={analyzeSimilarNotes}
-                disabled={loading}
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Analisar Novamente
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -16,7 +16,8 @@ import {
   Sparkles,
   BookOpen,
   BarChart3,
-  Menu
+  Menu,
+  Settings as SettingsIcon
 } from "lucide-react";
 
 const Navbar = () => {
@@ -39,6 +40,7 @@ const Navbar = () => {
     { path: "/mindmap", icon: Network, label: "Mapa Mental" },
     { path: "/diary", icon: BookOpen, label: "Diário" },
     { path: "/statistics", icon: BarChart3, label: "Estatísticas" },
+    { path: "/settings", icon: SettingsIcon, label: "Configurações" },
   ];
 
   return (

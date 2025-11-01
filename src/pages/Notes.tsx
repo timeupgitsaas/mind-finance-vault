@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSave } from "@/hooks/useAutoSave";
@@ -16,7 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, FileText, Search, Tag, Wand2, Minimize2, Maximize2, Loader2, Sparkles, Download, Trash2, Network, BookOpen } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
-import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 // Validation schema
@@ -49,6 +49,7 @@ const Notes = () => {
   const [focusMode, setFocusMode] = useState(false);
   const [activeTab, setActiveTab] = useState("notes");
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [aiSuggestionsOpen, setAiSuggestionsOpen] = useState(false);
   const { toast } = useToast();
   const { trackActivity } = useStatistics("notes");
   const navigate = useNavigate();
@@ -344,8 +345,19 @@ const Notes = () => {
                 />
               </div>
               
+              <Button
+                variant="outline"
+                onClick={() => setAiSuggestionsOpen(true)}
+                className="mb-4"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Sugestões de IA
+              </Button>
+
               <NoteSuggestions 
                 noteId={selectedNote.id}
+                open={aiSuggestionsOpen}
+                onOpenChange={setAiSuggestionsOpen}
                 onConnectionAccept={async (targetNoteId) => {
                   const currentConnections = selectedNote.manual_connections || [];
                   if (!currentConnections.includes(targetNoteId)) {

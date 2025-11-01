@@ -187,6 +187,42 @@ export const FlowBoard = () => {
     });
   };
 
+  const deleteFlow = async (flowId: string) => {
+    if (!window.confirm("Tem certeza que deseja excluir este fluxo? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("notes")
+      .delete()
+      .eq("id", flowId);
+
+    if (error) {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      const updatedFlows = flows.filter(f => f.id !== flowId);
+      setFlows(updatedFlows);
+      
+      if (currentFlowId === flowId) {
+        if (updatedFlows.length > 0) {
+          setCurrentFlowId(updatedFlows[0].id);
+        } else {
+          setCurrentFlowId(null);
+          setBlocks([]);
+        }
+      }
+      
+      toast({
+        title: "🗑️ Fluxo excluído!",
+        description: "O fluxo foi removido com sucesso.",
+      });
+    }
+  };
+
   const deleteBlock = (id: string) => {
     setBlocks(blocks.filter(b => b.id !== id).map(b => ({
       ...b,
@@ -367,18 +403,31 @@ export const FlowBoard = () => {
             </p>
           </div>
           {flows.length > 0 && (
-            <Select value={currentFlowId || ""} onValueChange={setCurrentFlowId}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Selecionar fluxo" />
-              </SelectTrigger>
-              <SelectContent>
-                {flows.map(flow => (
-                  <SelectItem key={flow.id} value={flow.id}>
-                    {flow.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Select value={currentFlowId || ""} onValueChange={setCurrentFlowId}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Selecionar fluxo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {flows.map(flow => (
+                    <SelectItem key={flow.id} value={flow.id}>
+                      {flow.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {currentFlowId && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => deleteFlow(currentFlowId)}
+                  className="text-destructive hover:text-destructive"
+                  title="Excluir fluxo atual"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
