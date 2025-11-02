@@ -39,47 +39,53 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       
-      // Fetch all user_preferences (one per user)
-      const { data: preferences, error: prefError } = await supabase
-        .from('user_preferences')
-        .select('user_id, created_at');
+      // Call the admin edge function to list users
+      const { data, error } = await supabase.functions.invoke('admin-list-users');
       
-      if (prefError) throw prefError;
-
-      // For each user, fetch their email and additional data
-      const usersData: User[] = await Promise.all(
-        (preferences || []).map(async (pref) => {
-          // Get subscription data
-          const { data: subscription } = await supabase
-            .from('subscriptions')
-            .select('plan_type')
-            .eq('user_id', pref.user_id)
-            .single();
-
-          // Get role
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', pref.user_id)
-            .single();
-
-          // Get user metadata from auth (this works for admins)
-          const { data: { user: authUser } } = await supabase.auth.admin.getUserById(pref.user_id);
-
-          return {
-            id: pref.user_id,
-            email: authUser?.email || 'N/A',
-            created_at: authUser?.created_at || pref.created_at,
-            last_sign_in_at: authUser?.last_sign_in_at || null,
-            plan_type: subscription?.plan_type || 'free',
-            role: roleData?.role || 'user',
-          };
-        })
-      );
+      if (error) throw error;
       
-      setUsers(usersData);
+      if (data?.users) {
+        setUsers(data.users);
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
+      // Fallback: try to fetch from user_preferences
+      try {
+        const { data: preferences, error: prefError } = await supabase
+          .from('user_preferences')
+          .select('user_id, created_at');
+        
+        if (prefError) throw prefError;
+
+        const usersData: User[] = await Promise.all(
+          (preferences || []).map(async (pref) => {
+            const { data: subscription } = await supabase
+              .from('subscriptions')
+              .select('plan_type')
+              .eq('user_id', pref.user_id)
+              .single();
+
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', pref.user_id)
+              .single();
+
+            return {
+              id: pref.user_id,
+              email: 'user@example.com', // Email não disponível sem admin API
+              created_at: pref.created_at,
+              last_sign_in_at: null,
+              plan_type: subscription?.plan_type || 'free',
+              role: roleData?.role || 'user',
+            };
+          })
+        );
+        
+        setUsers(usersData);
+      } catch (fallbackError) {
+        console.error("Fallback error:", fallbackError);
+      }
     } finally {
       setLoading(false);
     }
