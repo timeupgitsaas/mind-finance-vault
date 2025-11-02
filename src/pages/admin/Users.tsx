@@ -30,10 +30,11 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [refreshKey]);
 
   async function fetchUsers() {
     try {
@@ -233,6 +234,7 @@ export default function AdminUsers() {
           user={selectedUser}
           open={!!selectedUser}
           onClose={() => setSelectedUser(null)}
+          onPlanChanged={() => setRefreshKey(k => k + 1)}
         />
       )}
     </AdminLayout>
